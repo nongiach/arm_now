@@ -24,7 +24,9 @@ TARGET=arm-linux-gnueabi
 MY_ROOT=$(PWD)
 DOWNLOADS=$(MY_ROOT)/downloads/
 
-all: requirement download build img
+all: start
+
+compile: requirement download build img
 
 start:
 	qemu-system-arm -M versatilepb -m 256M \
@@ -47,7 +49,7 @@ start:
 
 requirement:
 	@echo "\n[+] Requirement"
-	# is gcc make installed ?
+	# you might need to instal gcc and make if not already
 	sudo apt-get install gcc-$(TARGET) qemu libncurses5-dev bc gdb-multiarch
 	# mount -o remount,size=4G,noatime /tmp
 	# yaourt -S gcc-arm-none-eabi-bin
