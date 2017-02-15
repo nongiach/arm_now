@@ -1,0 +1,28 @@
+#!/bin/sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+/sbin/mdev -s
+
+# mkdir -p /var/log
+
+touch /etc/passwd
+touch /etc/group
+# adduser root -u 0
+echo -e '\n' | adduser root -u 0
+
+ifconfig eth0 10.0.2.15
+route add default gw 10.0.2.2
+
+ifconfig lo up
+
+# mkdir /var/run -p
+
+syslogd
+ldconfig -v
+dropbear
+ntpd -p 0.ubuntu.pool.ntp.org
+# try this without internet ?
+# mkdir -p /etc/dropbear
+# dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+# dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+
