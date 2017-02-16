@@ -19,8 +19,6 @@ TARGET=arm-linux-gnueabi
 # export CROSS_COMPILE=arm-linux-gnueabihf-
 # TARGET=arm-linux-gnueabihf
 
-
-
 MY_ROOT=$(PWD)
 DOWNLOADS=$(MY_ROOT)/downloads/
 
@@ -39,17 +37,9 @@ start:
 		-redir tcp:5022::22 \
 		-redir tcp:1234::1234
 
-	# qemu-system-arm -M versatilepb -m 256M \
-	# 	-kernel zImage \
-	# 	-initrd rootfs.img \
-	# 	-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
-	# 	-serial stdio \
-	# 	-nographic -monitor /dev/null \
-	# 	-redir tcp:5022::22
-
 requirement:
 	@echo "\n[+] Requirement"
-	# you might need to instal gcc and make if not already
+	# you might need to install gcc and make if not already installed
 	sudo apt-get install gcc-$(TARGET) qemu libncurses5-dev bc gdb-multiarch
 	# mount -o remount,size=4G,noatime /tmp
 	# yaourt -S gcc-arm-none-eabi-bin
@@ -79,8 +69,8 @@ download:
 build:
 	rm -rf _install
 	cd $(LINUX_VER)/ && make versatile_defconfig && make -j $(PROCESSOR_COUNT) all
-	# cd $(BUSYBOX_VER)/ && make defconfig && make -j $(PROCESSOR_COUNT) install
-	cd $(BUSYBOX_VER)/ && make defconfig && make menuconfig && make -j $(PROCESSOR_COUNT) install
+	cd $(BUSYBOX_VER)/ && make defconfig && make -j $(PROCESSOR_COUNT) install
+	# cd $(BUSYBOX_VER)/ && make defconfig && make menuconfig && make -j $(PROCESSOR_COUNT) install
 	cd $(DROPBEAR_VER) && \
 		./configure --host=$(TARGET) --prefix=/ --disable-zlib CC=$(CROSS_COMPILE)gcc LD=$(CROSS_COMPILE)ld \
 		&& make PROGRAMS="dbclient scp dropbear"
@@ -95,7 +85,7 @@ fclean:
 	cp -r $(BUSYBOX_VER)/_install .
 
 # because the "make install" doesn't install everything that's needed
-# if you know a better way ping me: @chaignc
+# if you know a better way ping me: @chaign_c
 install_libc:
 	mkdir -p _install/lib
 	cp glibc-build/elf/ld.so _install/lib
@@ -128,6 +118,12 @@ chall:
 	cp chall01/a.out _install
 
 # /usr/arm-linux-gnueabi/lib
-img: conf
+img: conf pack
+
+pack:
 	cd _install && find . | cpio -o --format=newc --owner=root:root > ../rootfs.img
 
+unpack:
+	rm -rf _install
+	mkdir _install
+	cd _install && cpio -idv < ../rootfs.img

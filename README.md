@@ -9,7 +9,7 @@ Total size of 36Mo and 4 sec to boot.
 ### First install dependencies
 ```sh
 $ # Ubuntu
-$ sudo apt-get install qemu libncurses5-dev
+$ sudo apt-get install qemu make
 $ # Archlinux
 $ pacman -S qemu-arch-extra
 ```
@@ -63,7 +63,17 @@ vagrant ssh
 
 And then compile it from here, easy peasy bruh
 
+### Unpack / Pack
+The filesystem is readonly, but if you want to add a persistent file you can
+
+make unpack
+
+add your files to the _install directory
+
+make pack
+
 ### Todos
+ - add gdbserver
  - mips_now
 
 License
