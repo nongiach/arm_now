@@ -5,3 +5,4 @@ glibc-*/
 glibc-build
 _install
 linux-*/
+Qemu*
