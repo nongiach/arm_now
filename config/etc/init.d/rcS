@@ -1,15 +1,19 @@
 #!/bin/sh
-mount -t proc none /proc
-mount -t sysfs none /sys
+mount -t sysfs -o nodev,noexec,nosuid none /sys
+mount -t proc -o nodev,noexec,nosuid none /proc
+
 /sbin/mdev -s
 
 # mkdir -p /var/log
+mkdir /home /tmp
 
 touch /etc/passwd
 touch /etc/group
 # adduser root -u 0
 echo -e '\n' | adduser root -u 0
 addgroup users
+
+chmod a=rw,o= /etc/passwd
 
 ifconfig eth0 10.0.2.15
 route add default gw 10.0.2.2
