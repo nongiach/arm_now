@@ -120,6 +120,11 @@ chall:
 # /usr/arm-linux-gnueabi/lib
 img: conf pack
 
+doreconf:
+	cp -af config/* _install/
+
+reconf: unpack doreconf pack
+
 pack:
 	cd _install && find . | cpio -o --format=newc --owner=root:root > ../rootfs.img
 

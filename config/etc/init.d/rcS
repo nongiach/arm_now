@@ -9,6 +9,7 @@ touch /etc/passwd
 touch /etc/group
 # adduser root -u 0
 echo -e '\n' | adduser root -u 0
+addgroup users
 
 ifconfig eth0 10.0.2.15
 route add default gw 10.0.2.2
@@ -20,7 +21,7 @@ ifconfig lo up
 syslogd
 ldconfig -v
 dropbear
-ntpd -p 0.ubuntu.pool.ntp.org
+ntpd -p 0.ubuntu.pool.ntp.org &
 # try this without internet ?
 # mkdir -p /etc/dropbear
 # dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
