@@ -2,10 +2,13 @@
 mount -t sysfs -o nodev,noexec,nosuid none /sys
 mount -t proc -o nodev,noexec,nosuid none /proc
 
+mknod -m 0666 /dev/null c 1 3
+
 /sbin/mdev -s
 
 # mkdir -p /var/log
-mkdir /home /tmp
+mkdir -p /home /tmp
+chmod 777 /tmp
 
 touch /etc/passwd
 touch /etc/group
@@ -13,7 +16,7 @@ touch /etc/group
 echo -e '\n' | adduser root -u 0
 addgroup users
 
-chmod a=rw,o= /etc/passwd
+chmod a=rw,o=r /etc/passwd /etc/group
 
 ifconfig eth0 10.0.2.15
 route add default gw 10.0.2.2
@@ -26,6 +29,9 @@ syslogd
 ldconfig -v
 dropbear
 ntpd -p 0.ubuntu.pool.ntp.org &
+
+chmod 666 /dev/null /dev/zero
+
 # try this without internet ?
 # mkdir -p /etc/dropbear
 # dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key

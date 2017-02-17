@@ -106,7 +106,7 @@ install_libc:
 # wget http://ftp.fr.debian.org/debian/pool/main/l/ltrace/ltrace_0.5.3-2.1_armel.deb
 #dpkg-deb -x ltrace_0.5.3-2.1_armel.deb _install
 conf: install_libc
-	cd _install && mkdir -p proc/ sys/ dev/ etc/ etc/init.d lib/ bin/ var/log var/run var/lib/dpkg/info/
+	cd _install && mkdir -p proc/ sys/ dev/ etc/ etc/init.d lib/ bin/ var/log var/run var/lock var/lib/dpkg/info/
 	touch _install/var/lib/dpkg/status
 	cp $(LINUX_VER)/arch/$(ARCH)/boot/zImage .
 	cd _install/var && touch log/lastlog run/utmp log/wtmp
