@@ -73,7 +73,7 @@ add your files to the _install directory
 make pack
 
 ### Todos
- - add gdbserver
+ - add gdbserver, strace, ltrace, file, gdb ?, all binutils ?
  - mips_now
 
 License

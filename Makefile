@@ -37,6 +37,71 @@ start:
 		-redir tcp:5022::22 \
 		-redir tcp:1234::1234
 
+# http://nairobi-embedded.org/a_qemu_vlan_setup.html	
+# http://csortu.blogspot.fr/2009/12/building-virtual-network-with-qemu.html
+# start1:
+# 	qemu-system-arm -M versatilepb -m 256M \
+# 		-kernel zImage \
+# 		-initrd rootfs.img \
+# 		-drive if=sd,cache=unsafe,file=rootfs.img \
+# 		-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
+# 		-serial stdio \
+# 		-nographic -monitor /dev/null \
+# 		-net nic,vlan=1 \
+# 		-net user,vlan=1 \
+# 		-net nic,vlan=2,macaddr=52:54:00:12:34:57 \
+# 		-net socket,vlan=2,listen=127.0.0.1:1234
+#
+# start2:
+# 	qemu-system-arm -M versatilepb -m 256M \
+# 		-kernel zImage \
+# 		-initrd rootfs.img \
+# 		-drive if=sd,cache=unsafe,file=rootfs.img \
+# 		-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
+# 		-serial stdio \
+# 		-nographic -monitor /dev/null \
+# 		-net nic,vlan=2,macaddr=52:54:00:12:34:01 \
+# 		-net socket,vlan=2,connect=127.0.0.1:1234
+
+# source: http://brezular.com/2011/06/19/bridging-qemu-image-to-the-real-network-using-tap-interface/
+startnet:
+	qemu-system-arm -M versatilepb -m 256M \
+		-kernel zImage \
+		-initrd rootfs.img \
+		-drive if=sd,cache=unsafe,file=rootfs.img \
+		-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
+		-serial stdio \
+		-nographic -monitor /dev/null \
+		-net nic,vlan=0 -net tap,vlan=0,ifname=tap1,script=no
+
+startnet2:
+	qemu-system-arm -M versatilepb -m 256M \
+		-kernel zImage \
+		-initrd rootfs.img \
+		-drive if=sd,cache=unsafe,file=rootfs.img \
+		-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
+		-serial stdio \
+		-nographic -monitor /dev/null \
+		-net nic,vlan=0,macaddr=00:aa:00:60:00:01 \
+		-net tap,vlan=0,ifname=tap2,script=no
+		# -netdev tap,id=net0,ifname=tap2,script=no,downscript=no \
+		# -device e1000,netdev=net0,mac=00:aa:00:60:00:01
+		# -net tap,id=net0,ifname=tap2,script=no,downscript=no \
+		# -device e1000,netdev=net0,mac=00:aa:00:60:00:01
+
+# MAC_ADDR='DE:AD:BE:EF:F0:10'
+#
+# create_bridge:
+# 	# http://www.linux-kvm.org/page/Networking
+# 	sudo ip link add br0 type bridge
+# 	# sudo whoami => root !?
+# 	sudo ip tuntap add tap1 mode tap user `whoami`
+# 	sudo ip link set tap1 up
+# 	sudo ip link set tap1 master br0
+#
+# ifup:
+# 	sh qemu-ifup
+
 requirement:
 	@echo "\n[+] Requirement"
 	# you might need to install gcc and make if not already installed
@@ -132,3 +197,10 @@ unpack:
 	rm -rf _install
 	mkdir _install
 	cd _install && cpio -idv < ../rootfs.img
+
+# use getty to be able to use ctrl+c ?
+# exec getty -n -l /bin/sh 38400 /dev/tty0
+# help about that here
+# https://vincent.bernat.im/en/blog/2011-uml-network-lab
+# here better lab config:
+# https://vincent.bernat.im/en/blog/2012-network-lab-kvm

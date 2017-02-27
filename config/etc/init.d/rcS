@@ -28,9 +28,10 @@ ifconfig lo up
 syslogd
 ldconfig -v
 dropbear
-ntpd -p 0.ubuntu.pool.ntp.org &
+# ntpd -p 0.ubuntu.pool.ntp.org &
 
-chmod 666 /dev/null /dev/zero
+chmod a=w /dev/null
+chmod a=r /dev/urandom /dev/zero
 
 # try this without internet ?
 # mkdir -p /etc/dropbear
