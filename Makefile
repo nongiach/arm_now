@@ -37,31 +37,9 @@ start:
 		-redir tcp:5022::22 \
 		-redir tcp:1234::1234
 
+# OLD link:
 # http://nairobi-embedded.org/a_qemu_vlan_setup.html	
 # http://csortu.blogspot.fr/2009/12/building-virtual-network-with-qemu.html
-# start1:
-# 	qemu-system-arm -M versatilepb -m 256M \
-# 		-kernel zImage \
-# 		-initrd rootfs.img \
-# 		-drive if=sd,cache=unsafe,file=rootfs.img \
-# 		-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
-# 		-serial stdio \
-# 		-nographic -monitor /dev/null \
-# 		-net nic,vlan=1 \
-# 		-net user,vlan=1 \
-# 		-net nic,vlan=2,macaddr=52:54:00:12:34:57 \
-# 		-net socket,vlan=2,listen=127.0.0.1:1234
-#
-# start2:
-# 	qemu-system-arm -M versatilepb -m 256M \
-# 		-kernel zImage \
-# 		-initrd rootfs.img \
-# 		-drive if=sd,cache=unsafe,file=rootfs.img \
-# 		-append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0 rw" \
-# 		-serial stdio \
-# 		-nographic -monitor /dev/null \
-# 		-net nic,vlan=2,macaddr=52:54:00:12:34:01 \
-# 		-net socket,vlan=2,connect=127.0.0.1:1234
 
 # source: http://brezular.com/2011/06/19/bridging-qemu-image-to-the-real-network-using-tap-interface/
 startnet:
@@ -89,18 +67,18 @@ startnet2:
 		# -net tap,id=net0,ifname=tap2,script=no,downscript=no \
 		# -device e1000,netdev=net0,mac=00:aa:00:60:00:01
 
-# MAC_ADDR='DE:AD:BE:EF:F0:10'
-#
-# create_bridge:
-# 	# http://www.linux-kvm.org/page/Networking
-# 	sudo ip link add br0 type bridge
-# 	# sudo whoami => root !?
-# 	sudo ip tuntap add tap1 mode tap user `whoami`
-# 	sudo ip link set tap1 up
-# 	sudo ip link set tap1 master br0
-#
-# ifup:
-# 	sh qemu-ifup
+create_bridge:
+	# http://www.linux-kvm.org/page/Networking
+	sudo ip link add br0 type bridge
+	sudo ip addr add 192.168.122.1 dev br0
+
+	sudo ip tuntap add tap1 mode tap user $(USER)
+	sudo ip link set tap1 up
+	sudo ip link set tap1 master br0
+
+	sudo ip tuntap add tap2 mode tap user $(USER)
+	sudo ip link set tap2 up
+	sudo ip link set tap2 master br0
 
 requirement:
 	@echo "\n[+] Requirement"
