@@ -24,7 +24,7 @@ DOWNLOADS=$(MY_ROOT)/downloads/
 
 all: start
 
-compile: requirement download build img
+build: requirement download build img
 
 start:
 	qemu-system-arm -M versatilepb -m 256M \
@@ -182,3 +182,5 @@ unpack:
 # https://vincent.bernat.im/en/blog/2011-uml-network-lab
 # here better lab config:
 # https://vincent.bernat.im/en/blog/2012-network-lab-kvm
+# precompiled version of busybox here
+# https://www.busybox.net/downloads/binaries/
