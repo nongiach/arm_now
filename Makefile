@@ -24,7 +24,7 @@ DOWNLOADS=$(MY_ROOT)/downloads/
 
 all: start
 
-build: requirement download build img
+build: requirement download compile img
 
 start:
 	qemu-system-arm -M versatilepb -m 256M \
@@ -109,7 +109,7 @@ download:
 	$(call do_download,http://ftp.gnu.org/gnu/libc/,$(GLIBC_VER),tar.xz)
 
 
-build:
+compile:
 	rm -rf _install
 	cd $(LINUX_VER)/ && make versatile_defconfig && make -j $(PROCESSOR_COUNT) all
 	cd $(BUSYBOX_VER)/ && make defconfig && make -j $(PROCESSOR_COUNT) install
