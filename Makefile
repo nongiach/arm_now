@@ -1,8 +1,11 @@
 # LINUX_VER=linux-4.9
-LINUX_VER=linux-4.3.2
-BUSYBOX_VER=busybox-1.25.1
-DROPBEAR_VER=dropbear-2016.74
-GLIBC_VER=glibc-2.22
+# LINUX_VER=linux-4.3.2
+LINUX_VER=linux-4.15.7
+# BUSYBOX_VER=busybox-1.25.1
+BUSYBOX_VER=busybox-1.28.1
+DROPBEAR_VER=dropbear-2018.76
+# DROPBEAR_VER=dropbear-2016.74
+GLIBC_VER=glibc-2.27
 
 PROCESSOR_COUNT=8
 LINUX_KERNEL_FAMILY=4.x
@@ -27,7 +30,10 @@ all: start
 build: requirement download compile img
 
 start:
-	qemu-system-arm -M versatilepb -m 256M \
+	# qemu-system-arm -M versatilepb -m 256M
+	echo "press ^] to kill qemu 'ctrl + ]'"
+	stty intr ^]
+	qemu-system-arm -M vexpress-a9 -m 256M \
 		-kernel zImage \
 		-initrd rootfs.img \
 		-drive if=sd,cache=unsafe,file=rootfs.img \
@@ -35,7 +41,9 @@ start:
 		-serial stdio \
 		-nographic -monitor /dev/null \
 		-redir tcp:5022::22 \
-		-redir tcp:1234::1234
+		-redir tcp:1234::1234 \
+		-dtb vexpress-v2p-ca9.dtb
+	stty intr ^c
 
 # OLD link:
 # http://nairobi-embedded.org/a_qemu_vlan_setup.html	
@@ -82,8 +90,13 @@ create_bridge:
 
 requirement:
 	@echo "\n[+] Requirement"
-	# you might need to install gcc and make if not already installed
-	sudo apt-get install gcc-$(TARGET) qemu libncurses5-dev bc gdb-multiarch
+	# you might need to install gcc and make if not already installed
+	sudo which apt-get &>/dev/null && sudo apt-get install gcc-$(TARGET) qemu libncurses5-dev bc gdb-multiarch || echo
+
+	sudo which pacman &>/dev/null && (which qemu-system-$(ARCH) &>/dev/null || sudo pacman -S qemu-arch-extra) || echo
+	sudo which pacman &>/dev/null && (which arm-none-eabi-gcc &>/dev/null || yaourt -S gcc-arm-none-eabi-bin --noconfirm) || echo
+	# sudo which pacman &>/dev/null && (which arm-linux-gnueabi-gcc &>/dev/null || yaourt -S arm-linux-gnueabi --noconfirm) || echo
+
 	# mount -o remount,size=4G,noatime /tmp
 	# yaourt -S gcc-arm-none-eabi-bin
 	# yaourt -S qemu-arch-extra
@@ -111,7 +124,8 @@ download:
 
 compile:
 	rm -rf _install
-	cd $(LINUX_VER)/ && make versatile_defconfig && make -j $(PROCESSOR_COUNT) all
+	# cd $(LINUX_VER)/ && make versatile_defconfig && make -j $(PROCESSOR_COUNT) all
+	cd $(LINUX_VER)/ && make vexpress_defconfig && make -j $(PROCESSOR_COUNT) all
 	cd $(BUSYBOX_VER)/ && make defconfig && make -j $(PROCESSOR_COUNT) install
 	# cd $(BUSYBOX_VER)/ && make defconfig && make menuconfig && make -j $(PROCESSOR_COUNT) install
 	cd $(DROPBEAR_VER) && \
@@ -149,6 +163,7 @@ install_libc:
 # wget http://ftp.fr.debian.org/debian/pool/main/l/ltrace/ltrace_0.5.3-2.1_armel.deb
 #dpkg-deb -x ltrace_0.5.3-2.1_armel.deb _install
 conf: install_libc
+	cp ./$(LINUX_VER)/arch/arm/boot/dts/vexpress-v2p-ca9.dtb .
 	cd _install && mkdir -p proc/ sys/ dev/ etc/ etc/init.d lib/ bin/ var/log var/run var/lock var/lib/dpkg/info/
 	touch _install/var/lib/dpkg/status
 	cp $(LINUX_VER)/arch/$(ARCH)/boot/zImage .
@@ -184,3 +199,4 @@ unpack:
 # https://vincent.bernat.im/en/blog/2012-network-lab-kvm
 # precompiled version of busybox here
 # https://www.busybox.net/downloads/binaries/
+# 13 minutes of compilation with one cpu
