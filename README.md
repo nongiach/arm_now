@@ -29,7 +29,8 @@ Use the port 5022 of the host to ssh
 
 Example: ```ssh root@127.0.0.1 -p 5022```
 
-It's more convenient to use ssh because you will be able to Ctrl+c
+Example: ```scp ./file root@127.0.0.1:/tmp -P 5022```
+
 
 ```username root and no password```
 ### Windows people
@@ -75,6 +76,7 @@ make pack
 ### Todos
  - add gdbserver, strace, ltrace, file, gdb ?, all binutils ?
  - mips_now
+ - pip, arm_now local directory .. create_vm .. start_bin
 
 License
 ----

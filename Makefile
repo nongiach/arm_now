@@ -1,10 +1,8 @@
-# LINUX_VER=linux-4.9
-# LINUX_VER=linux-4.3.2
+# Author: @chaign_c
+
 LINUX_VER=linux-4.15.7
-# BUSYBOX_VER=busybox-1.25.1
 BUSYBOX_VER=busybox-1.28.1
 DROPBEAR_VER=dropbear-2018.76
-# DROPBEAR_VER=dropbear-2016.74
 GLIBC_VER=glibc-2.27
 
 PROCESSOR_COUNT=8
@@ -31,7 +29,6 @@ build: requirement download compile img
 
 start:
 	# qemu-system-arm -M versatilepb -m 256M
-	echo "press ^] to kill qemu 'ctrl + ]'"
 	stty intr ^]
 	qemu-system-arm -M vexpress-a9 -m 256M \
 		-kernel zImage \
@@ -93,6 +90,7 @@ requirement:
 	# you might need to install gcc and make if not already installed
 	sudo which apt-get &>/dev/null && sudo apt-get install gcc-$(TARGET) qemu libncurses5-dev bc gdb-multiarch || echo
 
+	# full recompilation on archlinux is not working, plz try and tell me all about your life
 	sudo which pacman &>/dev/null && (which qemu-system-$(ARCH) &>/dev/null || sudo pacman -S qemu-arch-extra) || echo
 	sudo which pacman &>/dev/null && (which arm-none-eabi-gcc &>/dev/null || yaourt -S gcc-arm-none-eabi-bin --noconfirm) || echo
 	# sudo which pacman &>/dev/null && (which arm-linux-gnueabi-gcc &>/dev/null || yaourt -S arm-linux-gnueabi --noconfirm) || echo
@@ -191,12 +189,7 @@ unpack:
 	mkdir _install
 	cd _install && cpio -idv < ../rootfs.img
 
-# use getty to be able to use ctrl+c ?
-# exec getty -n -l /bin/sh 38400 /dev/tty0
-# help about that here
-# https://vincent.bernat.im/en/blog/2011-uml-network-lab
 # here better lab config:
 # https://vincent.bernat.im/en/blog/2012-network-lab-kvm
 # precompiled version of busybox here
 # https://www.busybox.net/downloads/binaries/
-# 13 minutes of compilation with one cpu

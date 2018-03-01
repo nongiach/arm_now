@@ -38,4 +38,4 @@ chmod a=r /dev/urandom /dev/zero
 # mkdir -p /etc/dropbear
 # dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
 # dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-
+echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"
