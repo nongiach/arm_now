@@ -1,0 +1,8 @@
+busybox-*/
+downloads
+dropbear-*/
+glibc-*/
+glibc-build
+_install
+linux-*/
+Qemu*
