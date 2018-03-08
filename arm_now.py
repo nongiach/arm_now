@@ -13,9 +13,9 @@ import shutil
 import contextlib
 import operator
 
-import wget
+# import wget
 from pySmartDL import SmartDL
-import Levenshtein
+# import Levenshtein
 import difflib
 import clize
 

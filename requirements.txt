@@ -1,0 +1,3 @@
+requests==2.18.4
+clize==4.0.3
+pySmartDL==1.2.5
