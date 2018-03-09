@@ -71,9 +71,9 @@ a_file_created_on_the_host a_file_create_on_the_guest
 
 // TODO: add boot time to this array.
 
-# Upcomming features
+# Upcoming features
 
-- fully working package manager
+- a fully working package manager
 - briged network
 
 # Q & A
