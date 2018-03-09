@@ -213,7 +213,7 @@ distribution = platform.linux_distribution()[0].lower()
 
 def which(filename, **kwargs):
     try:
-        subprocess.check_call("which {} &> /dev/null".format(filename), shell=True)
+        subprocess.check_output(["which", filename])
         return True
     except subprocess.CalledProcessError:
         if distribution in kwargs:
@@ -224,7 +224,7 @@ def which(filename, **kwargs):
 
 def check_dependencies():
     dependencies = [
-            which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
+            which("ecp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
             which("qemu-system-arm", ubuntu="apt-get install qemu", arch="yaourt -S qemu-arch-extra")
             ]
     if not all(dependencies):
