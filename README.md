@@ -28,15 +28,6 @@ buildroot login: root
 microblaze
 ```
 
-# Start a x86_64 Virtual Machine
-```sh
-$ arm_now start x86-64-core-i7 --clean
-Welcome to Buildroot
-buildroot login: root
-# uname -m
-x86_64
-```
-
 # The current directory is automatically shared with the guest
 This might now work if there are a lot of files in the current directory, you have to type the command *save* before exiting the guest.
 ```sh
@@ -58,11 +49,27 @@ a_file_created_on_the_host a_file_create_on_the_guest
 ```
 
 # Supported
-| uname -m | command |
+| uname -m | image |
 | --- | --- |
-| armv7l | arm_now start armv5-eab -- clean |
-| x86_64 | arm_now start x86-64-core-i7 -- clean |
-| microblaze | arm_now start microblazeel -- clean |
+| armv7l | armv5-eabi |
+| armv7l | armv6-eabihf |
+| armv7l | armv7-eabihf |
+| | m68k-coldfire |
+| microblaze | microblazeel |
+| | mips32 |
+| | mips32el |
+| | mips64-n32 |
+| | mips64el-n32 |
+| | nios2 |
+| | powerpc 64-e5500 |
+| | powerpc64-power8 |
+| | powerpc64le-power8 |
+| | sh-sh4 |
+| x86_64 | x86-64-core-i7 |
+| | x86-core2 |
+| | x86-i686 |
+
+// TODO: add boot time to this array.
 
 # Q /A
 
@@ -88,6 +95,7 @@ The truth is I don't really know what I'm doing. But the code source is very sma
 - make a script based on buildroot that will compile every existing arch ? this sounds like hours of work :/
 - let the user choose the libc, (musl, glibc, uclibc)
 - allow the user to give any binary as input and start it in the right cpu arch, all dependencies should be automatically resolved and installed
+- add windows host support (checkout "old" branch)
 
 ## Who to thanks ?
 
