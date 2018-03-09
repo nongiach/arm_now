@@ -13,7 +13,8 @@ $ pip3 install https://github.com/nongiach/arm_now/archive/dev.zip
 # Start an arm Virtual Machine
 ```sh
 $ arm_now start armv5-eabi -- clean
-Booting ..
+Welcome to Buildroot
+buildroot login: root
 # uname -m
 armv7l
 ```
@@ -21,7 +22,8 @@ armv7l
 # Start a microblazeel Virtual Machine
 ```sh
 $ arm_now start microblazeel --clean
-Booting ...
+Welcome to Buildroot
+buildroot login: root
 # uname -m
 microblaze
 ```
@@ -29,7 +31,8 @@ microblaze
 # Start a x86_64 Virtual Machine
 ```sh
 $ arm_now start x86-64-core-i7 --clean
-Botting ...
+Welcome to Buildroot
+buildroot login: root
 # uname -m
 x86_64
 ```
@@ -40,7 +43,8 @@ This might now work if there are a lot of files in the current directory, you ha
 $ ls
 a_file_created_on_the_host
 $ arm_now start armv5-eabi -- clean
-Booting ..
+Welcome to Buildroot
+buildroot login: root
 # ls
 a_file_created_on_the_host
 # touch a_file_create_on_the_guest
