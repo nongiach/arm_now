@@ -31,7 +31,7 @@ microblaze
 ```
 
 # The current directory is automatically shared with the guest
-This might now work if there are a lot of files in the current directory, you have to type the command *save* before exiting the guest.
+This might not work if there are a lot of files in the current directory. You have to type the command *save* before exiting the guest.
 ```sh
 $ ls
 a_file_created_on_the_host
