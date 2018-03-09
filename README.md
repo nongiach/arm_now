@@ -5,6 +5,8 @@ arm_now is an easy way to instantly setup and start a virtual machine, a lot of 
 
 I mainly use this for security purpose (reverse/exploit).
 
+![Alt Text](https://github.com/nongiach/arm_now/blob/assets/arm_now.gif)
+
 # Install
 ```sh
 $ pip3 install https://github.com/nongiach/arm_now/archive/master.zip
