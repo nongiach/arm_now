@@ -15,12 +15,14 @@ import operator
 import subprocess
 import platform
 
-# import wget
+# once cpio fully supported will we still need this magic ?
+import magic
 from pySmartDL import SmartDL
-# import Levenshtein
 import difflib
 import clize
-# yaourt -S python-libguestfs 
+# import Levenshtein
+# import wget
+
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
 qemu_options = {
@@ -187,6 +189,10 @@ def avoid_parameter_injection(params):
     return new_params
 
 def add_local_files(rootfs, dest):
+    filetype = magic.from_file(rootfs)
+    if "ext2" not in filetype:
+        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filetype))
+        return
     # TODO: check rootfs fs against parameter injection
     with open("/tmp/arm_now/save", "w") as F:
         F.write("cd /root;tar cf /root.tar *")
@@ -204,10 +210,17 @@ def add_local_files(rootfs, dest):
             subprocess.check_call("e2mkdir -G 0 -O 0".split(' ') + [ rootfs + ":" + dest + root ])
             subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
 
-def get_local_files(ROOTFS, src, dest):
-    subprocess.check_call(["e2cp", ROOTFS + ":" + src, dest])
-    subprocess.check_call("tar xf root.tar".split(' '))
-    os.unlink("root.tar")
+def get_local_files(rootfs, src, dest):
+    filetype = magic.from_file(rootfs)
+    if "ext2" not in filetype:
+        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filetype))
+        return
+    subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
+    if os.path.exists("root.tar"):
+        subprocess.check_call("tar xf root.tar".split(' '))
+        os.unlink("root.tar")
+    else:
+        print("Use the 'save' command before exiting the vm to retrieve all files on the host")
 
 distribution = platform.linux_distribution()[0].lower()
 
@@ -224,7 +237,7 @@ def which(filename, **kwargs):
 
 def check_dependencies():
     dependencies = [
-            which("ecp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
+            which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
             which("qemu-system-arm", ubuntu="apt-get install qemu", arch="yaourt -S qemu-arch-extra")
             ]
     if not all(dependencies):
@@ -262,8 +275,7 @@ def do_clean():
         os.unlink(DTB)
     with contextlib.suppress(FileNotFoundError):
         os.unlink(ROOTFS)
-    with contextlib.suppress(FileNotFoundError):
-        os.unlink(DIR)
+    shutil.rmtree(DIR, ignore_errors=True)
 
 def test_arch(arch):
     arch = arch[:-1]

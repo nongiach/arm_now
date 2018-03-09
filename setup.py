@@ -13,6 +13,7 @@ setup(name='arm_now',
         install_requires=[
             'requests',
             'clize',
-            'pySmartDL'
+            'pySmartDL',
+            'python-magic'
             ]
         )
