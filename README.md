@@ -1,7 +1,7 @@
 
 
 # arm_now
-arm_now is an easy way to instantly start a virtual machine, a lot of CPU architectures are supported.
+arm_now is an easy way to instantly setup and start a virtual machine, a lot of CPU architectures are supported.
 
 I mainly use this for security purpose (reverse/exploit).
 
@@ -49,25 +49,25 @@ a_file_created_on_the_host a_file_create_on_the_guest
 ```
 
 # Supported
-| uname -m | image |
-| --- | --- |
-| armv7l | armv5-eabi |
-| armv7l | armv6-eabihf |
-| armv7l | armv7-eabihf |
-| | m68k-coldfire |
-| microblaze | microblazeel |
-| | mips32 |
-| | mips32el |
-| | mips64-n32 |
-| | mips64el-n32 |
-| | nios2 |
-| | powerpc 64-e5500 |
-| | powerpc64-power8 |
-| | powerpc64le-power8 |
-| | sh-sh4 |
-| x86_64 | x86-64-core-i7 |
-| | x86-core2 |
-| | x86-i686 |
+| image |
+| --- |
+| armv5-eabi |
+| armv6-eabihf |
+| armv7-eabihf |
+| m68k-coldfire |
+| microblazeel |
+| mips32 |
+| mips32el |
+| mips64-n32 |
+| mips64el-n32 |
+| nios2 |
+| powerpc 64-e5500 |
+| powerpc64-power8 |
+| powerpc64le-power8 |
+| sh-sh4 |
+| x86-64-core-i7 |
+| x86-core2 |
+| x86-i686 |
 
 // TODO: add boot time to this array.
 
