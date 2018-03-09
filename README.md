@@ -30,12 +30,13 @@ buildroot login: root
 microblaze
 ```
 
-# The current directory is automatically shared with the guest
-This might not work if there are a lot of files in the current directory. You have to type the command *save* before exiting the guest.
+# The current directory can be shared with the guest
+This might not work if there are a lot of files in the current directory.
+Use the *--sync* option, you have to type the command *save* before exiting the guest.
 ```sh
 $ ls
 a_file_created_on_the_host
-$ arm_now start armv5-eabi -- clean
+$ arm_now start armv5-eabi --clean --sync
 Welcome to Buildroot
 buildroot login: root
 # ls
