@@ -195,7 +195,7 @@ def add_local_files(rootfs, dest):
         return
     # TODO: check rootfs fs against parameter injection
     with open("/tmp/arm_now/save", "w") as F:
-        F.write("cd /root;tar cf /root.tar *")
+        F.write("cd /root;tar cf /root.tar *;sync")
     subprocess.check_call("e2cp -G 0 -O 0 -P 555 /tmp/arm_now/save".split(' ') + [rootfs + ":/sbin/"])
     for root, dirs, files in os.walk("."):
         if root == "./arm_now":
@@ -217,7 +217,7 @@ def get_local_files(rootfs, src, dest):
         return
     subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
     if os.path.exists("root.tar"):
-        with context.suppress(subprocess.CalledProcessError):
+        with contextlib.suppress(subprocess.CalledProcessError):
             subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
     else:
