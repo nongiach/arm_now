@@ -50,7 +50,7 @@ a_file_created_on_the_host a_file_create_on_the_guest
 
 # Supported
 
-| CPU | image |
+| CPU | images |
 | --- | --- |
 | arm | armv5-eabi, armv6-eabihf, armv7-eabihf |
 | m68k | m68k-coldfire |
