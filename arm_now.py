@@ -201,6 +201,10 @@ def rm_to_ext2(rootfs, filename):
     subprocess.check_call(["e2rm", rootfs + ":" + filename])
 
 def config_filesystem(rootfs):
+    filemagic = magic.from_file(rootfs)
+    if "ext2" not in filemagic:
+        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
+        return
     try:
         rm_to_ext2(rootfs, '/etc/init.d/S40network')
         rm_to_ext2(rootfs, '/etc/init.d/S90tests')
@@ -215,9 +219,9 @@ def config_filesystem(rootfs):
                 """)
 
 def add_local_files(rootfs, dest):
-    filetype = magic.from_file(rootfs)
-    if "ext2" not in filetype:
-        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filetype))
+    filemagic = magic.from_file(rootfs)
+    if "ext2" not in filemagic:
+        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
         return
     # TODO: check rootfs fs against parameter injection
     add_script_to_ext2(rootfs, "/sbin/save", 
@@ -251,9 +255,9 @@ def add_local_files(rootfs, dest):
     #         subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
 
 def get_local_files(rootfs, src, dest):
-    filetype = magic.from_file(rootfs)
-    if "ext2" not in filetype:
-        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filetype))
+    filemagic = magic.from_file(rootfs)
+    if "ext2" not in filemagic:
+        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
         return
     subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
     if os.path.exists("root.tar"):
