@@ -89,7 +89,7 @@ The truth is I don't really know what I'm doing. But the code source is very sma
 
 linux kernel, gcc, busybox, qemu, https://buildroot.org, https://toolchains.bootlin.com ...
 
-https://buildroot.org/
+
 ----
 By [@chaign\_c][] [#HexpressoTeam][hexpresso].
 
