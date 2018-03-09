@@ -1,18 +1,20 @@
 
 
 # arm_now
-arm_now is an easy way to instantly start a virtual machine, a lot of CPU architectures are supported.
+arm_now is an easy way to instantly setup and start a virtual machine, a lot of CPU architectures are supported.
 
 I mainly use this for security purpose (reverse/exploit).
 
 # Install
 ```sh
-$ pip3 install https://github.com/nongiach/arm_now/archive/dev.zip
+$ pip3 install https://github.com/nongiach/arm_now/archive/master.zip
 ```
 
 # Start an arm Virtual Machine
 ```sh
-$ arm_now start armv5-eabi -- clean
+$ mkdir test
+$ cd test
+$ arm_now start armv5-eabi --clean
 Welcome to Buildroot
 buildroot login: root
 # uname -m
@@ -28,17 +30,8 @@ buildroot login: root
 microblaze
 ```
 
-# Start a x86_64 Virtual Machine
-```sh
-$ arm_now start x86-64-core-i7 --clean
-Welcome to Buildroot
-buildroot login: root
-# uname -m
-x86_64
-```
-
 # The current directory is automatically shared with the guest
-This might now work if there are a lot of files in the current directory, you have to type the command *save* before exiting the guest.
+This might not work if there are a lot of files in the current directory. You have to type the command *save* before exiting the guest.
 ```sh
 $ ls
 a_file_created_on_the_host
@@ -58,13 +51,26 @@ a_file_created_on_the_host a_file_create_on_the_guest
 ```
 
 # Supported
-| uname -m | command |
-| --- | --- |
-| armv7l | arm_now start armv5-eab -- clean |
-| x86_64 | arm_now start x86-64-core-i7 -- clean |
-| microblaze | arm_now start microblazeel -- clean |
 
-# Q /A
+| CPU | images |
+| --- | --- |
+| arm | armv5-eabi, armv6-eabihf, armv7-eabihf |
+| m68k | m68k-coldfire |
+| microblaze | microblazeel |
+| mips | mips32, mips32el, mips64-n32, mips64el-n32 |
+| nios2 | nios2 |
+| powerpc | powerpc64-e5500, powerpc64-power8, powerpc64le-power8 |
+| sh4 | sh-sh4 |
+| x86 | x86-64-core-i7, x86-core2, x86-i686 |
+
+// TODO: add boot time to this array.
+
+# Upcoming features
+
+- a fully working package manager
+- briged network
+
+# Q & A
 
 ## How to exit qemu
 
@@ -80,7 +86,7 @@ Yes, it's a real virtual machine we use qemu-system-\*. It's not a container or 
 
 ## How can I help ?
 
-The truth is I don't really know what I'm doing. But the code source is very small about 300 lines of python, don't be afraid to pull request.
+I do this project as a hobbie, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
 - A lot of cpu arch are still not supported, bfin, sparc, xtensa .., at line 28 of arm_now.py you will find a dict that you can play with to add new cpu arch.
 - setup network interfaces
 - add package manager (my next priority). opkg with https://wiki.openwrt.org/about/mirrors or http://pkg.entware.net/binaries/
@@ -88,6 +94,7 @@ The truth is I don't really know what I'm doing. But the code source is very sma
 - make a script based on buildroot that will compile every existing arch ? this sounds like hours of work :/
 - let the user choose the libc, (musl, glibc, uclibc)
 - allow the user to give any binary as input and start it in the right cpu arch, all dependencies should be automatically resolved and installed
+- add windows host support (checkout "old" branch)
 
 ## Who to thanks ?
 
