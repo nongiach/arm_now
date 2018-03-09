@@ -12,13 +12,14 @@ from pprint import pprint
 import shutil
 import contextlib
 import operator
+import subprocess
 
 # import wget
 from pySmartDL import SmartDL
 # import Levenshtein
 import difflib
 import clize
-
+# yaourt -S python-libguestfs 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
 qemu_options = {
@@ -50,6 +51,11 @@ qemu_options = {
         "x86-i686":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
         # "xtensa-lx60":, TODO
         }
+
+DIR = "arm_now/"
+KERNEL = DIR + "kernel"
+DTB = DIR + "dtb"
+ROOTFS = DIR + "rootfs.ext2"
 
 def maybe_you_meant(string, strings):
     return ' or '.join(difflib.get_close_matches(string, strings, cutoff=0.3))
@@ -134,7 +140,7 @@ def run(arch, kernel, dtb, rootfs):
     dtb = "" if not os.path.exists(dtb) else "-dtb {}".format(dtb)
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
-    print("run qemu-system-{}".format(arch))
+    print("Starting qemu-system-{}".format(arch))
     qemu_config = "-serial stdio -monitor /dev/null"
     # qemu_config = ""
     cmd = """stty intr ^]
@@ -146,11 +152,11 @@ def run(arch, kernel, dtb, rootfs):
                -no-reboot
        stty intr ^c
     """.format(arch=arch, qemu_config=qemu_config, options=options, dtb=dtb)
+    print(cmd)
     os.system(cmd)
 
 def install(arch="x86-i686"):
     if arch not in qemu_options:
-        # TODO: try a you do you mean ?
         print("ERROR: I don't know this arch yet", file=sys.stderr)
         print("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys())), file=sys.stderr)
         sys.exit(1)
@@ -158,23 +164,67 @@ def install(arch="x86-i686"):
     if kernel is None or rootfs is None:
         print("ERROR: could download files for this arch", file=sys.stderr)
         sys.exit(1)
-    download(kernel, "kernel")
+    with contextlib.suppress(FileExistsError):
+        os.mkdir(DIR)
+    download(kernel, KERNEL)
     if dtb:
-        download(dtb, "dtb")
-    download(rootfs, "rootfs.ext2")
+        download(dtb, DTB)
+    download(rootfs, ROOTFS)
+
+def avoid_parameter_injection(params):
+    new_params = []
+    for p in params:
+        if p.startswith("-"):
+            print("WARNING: parameter injection detected, '{}' will be ingored".format(p))
+        else:
+            new_params.append(p)
+    return new_params
+
+def add_local_files(rootfs, dest):
+    # TODO: check rootfs fs against parameter injection
+    with open("/tmp/arm_now/save", "w") as F:
+        F.write("cd /root;tar cf /root.tar *")
+    # os.chmod("/tmp/arm_now/save", 555)
+    subprocess.check_call("e2cp -G 0 -O 0 -P 555 /tmp/arm_now/save".split(' ') + [rootfs + ":/sbin/"])
+    for root, dirs, files in os.walk("."):
+        if root == "./arm_now":
+            continue
+        if root.startswith("-"):
+            print("WARNING: parameter injection detected, '{}' will be ingored".format(root))
+            continue
+        files = avoid_parameter_injection(files)
+        # TODO check root security
+        files = [ root + "/" + f for f in files ]
+        if files:
+            subprocess.check_call("e2mkdir -G 0 -O 0".split(' ') + [ rootfs + ":" + dest + root ])
+            subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
+        print(root)
+        print(dirs)
+        print(files)
+
+def get_local_files(ROOTFS, src, dest):
+    subprocess.check_call(["e2cp", ROOTFS + ":" + src, dest])
+    subprocess.check_call("tar xf root.tar".split(' '))
+    os.unlink("root.tar")
+
+def test():
+    get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
 def start(arch):
-    clean()
-    install(arch)
-    run(arch, "kernel", "dtb", "rootfs.ext2")
+    # clean()
+    # install(arch)
+    add_local_files(ROOTFS, "/root")
+    run(arch, KERNEL, DTB, ROOTFS)
+    # get_local_files(ROOTFS, "/root", ".")
+    get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
 def clean():
     with contextlib.suppress(FileNotFoundError):
-        os.unlink("kernel")
+        os.unlink(KERNEL)
     with contextlib.suppress(FileNotFoundError):
-        os.unlink("dtb")
+        os.unlink(DTB)
     with contextlib.suppress(FileNotFoundError):
-        os.unlink("rootfs.ext2")
+        os.unlink(ROOTFS)
 
 def test_arch(arch):
     arch = arch[:-1]
@@ -189,15 +239,16 @@ def test_arch(arch):
     #     pass
 
 def list_arch():
-    url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
-    all_arch = indexof_parse(url)
-    p = Pool(10)
-    ret = p.map(test_arch, all_arch)
+    print(list(qemu_options.keys()))
+    # url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
+    # all_arch = indexof_parse(url)
+    # p = Pool(10)
+    # ret = p.map(test_arch, all_arch)
 
 if __name__ == "__main__":
-    clize.run(install, start, clean, list_arch)
+    clize.run(install, start, clean, list_arch, test)
 
-# alternative
-#  buildroot
+# alternatives
+# buildroot
 # debootstrap
 # lxc/lxd
