@@ -157,6 +157,8 @@ def run(arch, kernel, dtb, rootfs):
     os.system(cmd)
 
 def install(arch="x86-i686"):
+    """ download and setup filesystem and kernel
+    """
     if arch not in qemu_options:
         print("ERROR: I don't know this arch yet", file=sys.stderr)
         print("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys())), file=sys.stderr)
@@ -165,7 +167,6 @@ def install(arch="x86-i686"):
     if kernel is None or rootfs is None:
         print("ERROR: could download files for this arch", file=sys.stderr)
         sys.exit(1)
-    with contextlib.suppress(FileExistsError):
     try:
         os.mkdir(DIR)
     except FileExistsError as e:
@@ -230,7 +231,11 @@ def check_dependencies():
 def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
-def start(arch, clean=False):
+def start(arch, *, clean=False):
+    """Setup and starts a virtualmachine using qemu.
+
+    :param arch: The cpu architecture that will be started.
+    """
     check_dependencies()
     if clean:
         do_clean()
@@ -241,6 +246,8 @@ def start(arch, clean=False):
     get_local_files(ROOTFS, "/root.tar", ".")
 
 def do_clean():
+    """ Clean the filesystem.
+    """
     with contextlib.suppress(FileNotFoundError):
         os.unlink(KERNEL)
     with contextlib.suppress(FileNotFoundError):
@@ -263,6 +270,8 @@ def test_arch(arch):
     #     pass
 
 def list_arch():
+    """ List all compactible cpu architecture
+    """
     print(list(qemu_options.keys()))
     # url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
     # all_arch = indexof_parse(url)
@@ -270,7 +279,13 @@ def list_arch():
     # ret = p.map(test_arch, all_arch)
 
 def main():
-    clize.run(install, start, clean, list_arch, test)
+    # clize.run(install, start, clean, list_arch, test)
+    clize.run({
+        "start": start,
+        "clean": do_clean,
+        "list": list_arch,
+        "install": install
+        })
 
 if __name__ == "__main__":
     main()
