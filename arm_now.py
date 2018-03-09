@@ -216,7 +216,10 @@ def which(filename, **kwargs):
         subprocess.check_call("which {} &> /dev/null".format(filename), shell=True)
         return True
     except subprocess.CalledProcessError:
-        print(kwargs[distribution])
+        if distribution in kwargs:
+            print(kwargs[distribution])
+        else:
+            print(kwargs["ubuntu"])
         return False
 
 def check_dependencies():
@@ -231,11 +234,16 @@ def check_dependencies():
 def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
-def start(arch, *, clean=False):
+def start(arch="", *, clean=False):
     """Setup and starts a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
     """
+    if not arch:
+        print("Supported architectures:")
+        print(list_arch())
+        raise clize.ArgumentError("no arch specified")
+        # sys.exit(1)
     check_dependencies()
     if clean:
         do_clean()
@@ -272,7 +280,7 @@ def test_arch(arch):
 def list_arch():
     """ List all compactible cpu architecture
     """
-    print(list(qemu_options.keys()))
+    print('\n'.join(qemu_options.keys()))
     # url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
     # all_arch = indexof_parse(url)
     # p = Pool(10)
