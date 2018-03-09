@@ -217,7 +217,8 @@ def get_local_files(rootfs, src, dest):
         return
     subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
     if os.path.exists("root.tar"):
-        subprocess.check_call("tar xf root.tar".split(' '))
+        with context.suppress(subprocess.CalledProcessError):
+            subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
     else:
         print("Use the 'save' command before exiting the vm to retrieve all files on the host")
