@@ -49,25 +49,17 @@ a_file_created_on_the_host a_file_create_on_the_guest
 ```
 
 # Supported
-| image |
-| --- |
-| armv5-eabi |
-| armv6-eabihf |
-| armv7-eabihf |
-| m68k-coldfire |
-| microblazeel |
-| mips32 |
-| mips32el |
-| mips64-n32 |
-| mips64el-n32 |
-| nios2 |
-| powerpc 64-e5500 |
-| powerpc64-power8 |
-| powerpc64le-power8 |
-| sh-sh4 |
-| x86-64-core-i7 |
-| x86-core2 |
-| x86-i686 |
+
+| CPU | image |
+| --- | --- |
+| arm | armv5-eabi, armv6-eabihf, armv7-eabihf |
+| m68k | m68k-coldfire |
+| microblaze | microblazeel |
+| mips | mips32, mips32el, mips64-n32, mips64el-n32 |
+| nios2 | nios2 |
+| powerpc | powerpc64-e5500, powerpc64-power8, powerpc64le-power8 |
+| sh4 | sh-sh4 |
+| x86 | x86-64-core-i7, x86-core2, x86-i686 |
 
 // TODO: add boot time to this array.
 
