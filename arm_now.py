@@ -14,6 +14,7 @@ import contextlib
 import operator
 import subprocess
 import platform
+import tempfile
 
 # once cpio fully supported will we still need this magic ?
 import magic
@@ -27,9 +28,9 @@ DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
 qemu_options = {
         # "aarch64":, TODO
-        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyS0 rw physmap.enabled=0'"],
-        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyS0 rw physmap.enabled=0'"],
-        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyS0 rw physmap.enabled=0'"],
+        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0'"],
+        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0'"],
+        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0'"],
         # "bfin":, TODO
         # "m68k-68xxx":, TODO 
         "m68k-coldfire": ["m68k", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
@@ -188,27 +189,66 @@ def avoid_parameter_injection(params):
             new_params.append(p)
     return new_params
 
+def add_script_to_ext2(rootfs, dest, script):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filename = tmpdirname + "/script"
+        print(filename)
+        with open(filename, "w") as F:
+            F.write(script)
+        subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') + [filename, rootfs + ":" + dest])
+
+def rm_to_ext2(rootfs, filename):
+    subprocess.check_call(["e2rm", rootfs + ":" + filename])
+
+def config_filesystem(rootfs):
+    try:
+        rm_to_ext2(rootfs, '/etc/init.d/S40network')
+        rm_to_ext2(rootfs, '/etc/init.d/S90tests')
+    except subprocess.CalledProcessError as e:
+        print("WARNING: e2rm failed !!!")
+    add_script_to_ext2(rootfs, "/etc/init.d/S95_how_to_kill_qemu", 
+            'echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"\n')
+    add_script_to_ext2(rootfs, "/etc/init.d/S40_network","""
+                ifconfig eth0 10.0.2.15
+                route add default gw 10.0.2.2
+                echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
+                """)
+
 def add_local_files(rootfs, dest):
     filetype = magic.from_file(rootfs)
     if "ext2" not in filetype:
         print("{}\nthis filetype is not fully supported yet, but this will boot".format(filetype))
         return
     # TODO: check rootfs fs against parameter injection
-    with open("/tmp/arm_now/save", "w") as F:
-        F.write("cd /root;tar cf /root.tar *;sync")
-    subprocess.check_call("e2cp -G 0 -O 0 -P 555 /tmp/arm_now/save".split(' ') + [rootfs + ":/sbin/"])
-    for root, dirs, files in os.walk("."):
-        if root == "./arm_now":
-            continue
-        if root.startswith("-"):
-            print("WARNING: parameter injection detected, '{}' will be ingored".format(root))
-            continue
-        files = avoid_parameter_injection(files)
-        # TODO check root security
-        files = [ root + "/" + f for f in files ]
+    add_script_to_ext2(rootfs, "/sbin/save", 
+            "cd /root\ntar cf /root.tar *\nsync\n")
+    # with open("/tmp/arm_now/save", "w") as F:
+    #     F.write()
+    # subprocess.check_call("e2cp -G 0 -O 0 -P 555 /tmp/arm_now/save".split(' ') + [rootfs + ":/sbin/"])
+    print("Adding current directory to the filesystem..")
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        files = [ i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-") ]
         if files:
-            subprocess.check_call("e2mkdir -G 0 -O 0".split(' ') + [ rootfs + ":" + dest + root ])
-            subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
+            tar = tmpdirname + "/current_directory.tar"
+            subprocess.check_call(["tar", "cf", tar] + files)
+            subprocess.check_call("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"])
+            add_script_to_ext2(rootfs, "/etc/init.d/S95_sync_current_diretory","""
+                        cd /root
+                        tar xf /current_directory.tar
+                        rm /current_directory.tar
+                        """)
+    # for root, dirs, files in os.walk("."):
+    #     if root == "./arm_now":
+    #         continue
+    #     if root.startswith("-"):
+    #         print("WARNING: parameter injection detected, '{}' will be ingored".format(root))
+    #         continue
+    #     files = avoid_parameter_injection(files)
+    #     # TODO check root security
+    #     files = [ root + "/" + f for f in files ]
+    #     if files:
+    #         subprocess.check_call("e2mkdir -G 0 -O 0".split(' ') + [ rootfs + ":" + dest + root ])
+    #         subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
 
 def get_local_files(rootfs, src, dest):
     filetype = magic.from_file(rootfs)
@@ -248,10 +288,12 @@ def check_dependencies():
 def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
-def start(arch="", *, clean=False):
+def start(arch="", *, clean=False, sync=False):
     """Setup and starts a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
+    :param clean: Clean filesystem before starting.
+    :param sync: Sync le current directory with the guest.
     """
     if not arch:
         print("Supported architectures:")
@@ -262,10 +304,12 @@ def start(arch="", *, clean=False):
     if clean:
         do_clean()
     install(arch)
-    add_local_files(ROOTFS, "/root")
+    config_filesystem(ROOTFS)
+    if sync:
+        add_local_files(ROOTFS, "/root")
     run(arch, KERNEL, DTB, ROOTFS)
-    # get_local_files(ROOTFS, "/root", ".")
-    get_local_files(ROOTFS, "/root.tar", ".")
+    if sync:
+        get_local_files(ROOTFS, "/root.tar", ".")
 
 def do_clean():
     """ Clean the filesystem.
