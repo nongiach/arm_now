@@ -7,7 +7,7 @@ I mainly use this for security purpose (reverse/exploit).
 
 # Install
 ```sh
-$ pip3 install https://github.com/nongiach/arm_now/archive/dev.zip
+$ pip3 install https://github.com/nongiach/arm_now/archive/master.zip
 ```
 
 # Start an arm Virtual Machine
@@ -71,7 +71,12 @@ a_file_created_on_the_host a_file_create_on_the_guest
 
 // TODO: add boot time to this array.
 
-# Q /A
+# Upcomming features
+
+- fully working package manager
+- briged network
+
+# Q & A
 
 ## How to exit qemu
 
@@ -87,7 +92,7 @@ Yes, it's a real virtual machine we use qemu-system-\*. It's not a container or 
 
 ## How can I help ?
 
-The truth is I don't really know what I'm doing. But the code source is very small about 300 lines of python, don't be afraid to pull request.
+I do this project as a hobbie, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
 - A lot of cpu arch are still not supported, bfin, sparc, xtensa .., at line 28 of arm_now.py you will find a dict that you can play with to add new cpu arch.
 - setup network interfaces
 - add package manager (my next priority). opkg with https://wiki.openwrt.org/about/mirrors or http://pkg.entware.net/binaries/
