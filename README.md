@@ -12,6 +12,8 @@ $ pip3 install https://github.com/nongiach/arm_now/archive/master.zip
 
 # Start an arm Virtual Machine
 ```sh
+$ mkdir test
+$ cd test
 $ arm_now start armv5-eabi -- clean
 Welcome to Buildroot
 buildroot login: root
