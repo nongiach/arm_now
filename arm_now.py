@@ -166,7 +166,11 @@ def install(arch="x86-i686"):
         print("ERROR: could download files for this arch", file=sys.stderr)
         sys.exit(1)
     with contextlib.suppress(FileExistsError):
+    try:
         os.mkdir(DIR)
+    except FileExistsError as e:
+        print("{} exists, use --clean to restart with a fresh filesystem".format(DIR))
+        return
     download(kernel, KERNEL)
     if dtb:
         download(dtb, DTB)
@@ -226,22 +230,25 @@ def check_dependencies():
 def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
-def start(arch):
+def start(arch, clean=False):
     check_dependencies()
-    # clean()
-    # install(arch)
+    if clean:
+        do_clean()
+    install(arch)
     add_local_files(ROOTFS, "/root")
     run(arch, KERNEL, DTB, ROOTFS)
     # get_local_files(ROOTFS, "/root", ".")
-    get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
+    get_local_files(ROOTFS, "/root.tar", ".")
 
-def clean():
+def do_clean():
     with contextlib.suppress(FileNotFoundError):
         os.unlink(KERNEL)
     with contextlib.suppress(FileNotFoundError):
         os.unlink(DTB)
     with contextlib.suppress(FileNotFoundError):
         os.unlink(ROOTFS)
+    with contextlib.suppress(FileNotFoundError):
+        os.unlink(DIR)
 
 def test_arch(arch):
     arch = arch[:-1]
