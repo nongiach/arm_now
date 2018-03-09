@@ -9,3 +9,6 @@ Qemu*
 dtb
 kernel
 rootfs*
+arm_now.egg-info/
+build/
+dist/

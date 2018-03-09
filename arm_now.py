@@ -13,6 +13,7 @@ import shutil
 import contextlib
 import operator
 import subprocess
+import platform
 
 # import wget
 from pySmartDL import SmartDL
@@ -184,7 +185,6 @@ def add_local_files(rootfs, dest):
     # TODO: check rootfs fs against parameter injection
     with open("/tmp/arm_now/save", "w") as F:
         F.write("cd /root;tar cf /root.tar *")
-    # os.chmod("/tmp/arm_now/save", 555)
     subprocess.check_call("e2cp -G 0 -O 0 -P 555 /tmp/arm_now/save".split(' ') + [rootfs + ":/sbin/"])
     for root, dirs, files in os.walk("."):
         if root == "./arm_now":
@@ -198,19 +198,36 @@ def add_local_files(rootfs, dest):
         if files:
             subprocess.check_call("e2mkdir -G 0 -O 0".split(' ') + [ rootfs + ":" + dest + root ])
             subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
-        print(root)
-        print(dirs)
-        print(files)
 
 def get_local_files(ROOTFS, src, dest):
     subprocess.check_call(["e2cp", ROOTFS + ":" + src, dest])
     subprocess.check_call("tar xf root.tar".split(' '))
     os.unlink("root.tar")
 
+distribution = platform.linux_distribution()[0].lower()
+
+def which(filename, **kwargs):
+    try:
+        subprocess.check_call("which {} &> /dev/null".format(filename), shell=True)
+        return True
+    except subprocess.CalledProcessError:
+        print(kwargs[distribution])
+        return False
+
+def check_dependencies():
+    dependencies = [
+            which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
+            which("qemu-system-arm", ubuntu="apt-get install qemu", arch="yaourt -S qemu-arch-extra")
+            ]
+    if not all(dependencies):
+        print("requirements missing, plz install them", file=sys.stderr)
+        sys.exit(1)
+
 def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
 def start(arch):
+    check_dependencies()
     # clean()
     # install(arch)
     add_local_files(ROOTFS, "/root")
@@ -245,8 +262,11 @@ def list_arch():
     # p = Pool(10)
     # ret = p.map(test_arch, all_arch)
 
-if __name__ == "__main__":
+def main():
     clize.run(install, start, clean, list_arch, test)
+
+if __name__ == "__main__":
+    main()
 
 # alternatives
 # buildroot
