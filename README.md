@@ -14,7 +14,7 @@ $ pip3 install https://github.com/nongiach/arm_now/archive/master.zip
 ```sh
 $ mkdir test
 $ cd test
-$ arm_now start armv5-eabi -- clean
+$ arm_now start armv5-eabi --clean
 Welcome to Buildroot
 buildroot login: root
 # uname -m
