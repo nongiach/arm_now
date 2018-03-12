@@ -89,7 +89,7 @@ Yes, it's a real virtual machine we use qemu-system-\*. It's not a container or 
 
 ## How can I help ?
 
-I do this project as a hobbie, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
+I do this project as a hobby, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
 - A lot of cpu arch are still not supported, bfin, sparc, xtensa .., at line 28 of arm_now.py you will find a dict that you can play with to add new cpu arch.
 - setup network interfaces
 - add package manager (my next priority). opkg with https://wiki.openwrt.org/about/mirrors or http://pkg.entware.net/binaries/
