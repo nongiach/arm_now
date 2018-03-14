@@ -70,7 +70,7 @@ a_file_created_on_the_host a_file_create_on_the_guest
 
 # Upcoming features
 
-- a fully working package manager
+- a fully working package manager (I will add it this weekend, come back next week!) // https://github.com/Entware/Entware-ng
 - briged network
 
 # Q & A
