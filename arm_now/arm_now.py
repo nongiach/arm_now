@@ -22,7 +22,7 @@ from pySmartDL import SmartDL
 import difflib
 import clize
 
-from .exall import exall, hide, print_warning, print_traceback, print_error
+from .exall import exall, ignore, print_warning, print_traceback, print_error
 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
@@ -74,7 +74,7 @@ ROOTFS = DIR + "rootfs.ext2"
 def maybe_you_meant(string, strings):
     return ' or '.join(difflib.get_close_matches(string, strings, cutoff=0.3))
 
-@exall(os.mkdir, FileExistsError, hide)
+@exall(os.mkdir, FileExistsError, ignore)
 def download(url, filename):
     print("\nDownloading {} from {}".format(filename, url))
     filename_cache = url.split('/')[-1]
@@ -319,7 +319,7 @@ def start(arch="", *, clean=False, sync=False):
     if sync:
         get_local_files(ROOTFS, "/root.tar", ".")
 
-@exall(os.unlink, FileExistsError, hide)
+@exall(os.unlink, FileExistsError, ignore)
 def do_clean():
     """ Clean the filesystem.
     """

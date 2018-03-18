@@ -16,5 +16,6 @@ setup(name='arm_now',
             'clize',
             'pySmartDL',
             'python-magic'
-            ]
+            ],
+        keywords = ['emulator', 'arm', 'mips', 'powerpc', 'x86', 'qemu']
         )

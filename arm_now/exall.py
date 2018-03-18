@@ -2,10 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: @chaign_c
 
-import contextlib
-import os
 from contextlib import ContextDecorator
-# from functools import wraps
 
 # ==========================================================
 # Exception manager based on decorator/context/callback.
@@ -26,22 +23,32 @@ def do_exall(fn, exception, callback):
     new_function.__wrapped__ = fn
     return new_function
 
+def the_real_module(module):
+    if module == "posix":
+        return "os"
+    return module
+
 class exall(ContextDecorator):
     """
         A context and decorator for do_exall.
         Call *callback* on *exception* when *fn* is called. 
     """
-    def __init__(self, fn, exception, callable):
+    def __init__(self, fn, exception, callback):
         super().__init__()
-        self.fn_module = __import__(fn.__module__)
+        self.fn = fn
+        self.exception = exception
+        self.callback = callback
+        # self.fn_module = globals()[fn.__module__]
+        self.fn_module = __import__(the_real_module(fn.__module__))
         self.fn_name = fn.__name__
-        self.backup = fn
 
     def __enter__(self):
-        setattr(self.fn_module,  self.fn_name, do_exall(fn, exception, callback))
+        print("Enter exall({}..)".format(self.fn_name))
+        setattr(self.fn_module,  self.fn_name, do_exall(self.fn, self.exception, self.callback))
 
     def __exit__(self, *exc):
-        setattr(self.fn_module,  self.fn_name, self.backup)
+        print("Exit exall({}..)".format(self.fn_name))
+        setattr(self.fn_module,  self.fn_name, self.fn)
 
 # =========================================================
 # Callbacks: several basic way of handling exception
