@@ -4,6 +4,7 @@ setup(name='arm_now',
         version='1.0',
         author='@chaign_c',
         url='https://www.python.org/sigs/distutils-sig/',
+        packages=['arm_now'],
         py_modules=['arm_now'],
         entry_points = {
             'console_scripts': [

@@ -21,40 +21,50 @@ import magic
 from pySmartDL import SmartDL
 import difflib
 import clize
-# import Levenshtein
-# import wget
+
+from .exall import exall, hide, print_warning, print_traceback, print_error
 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
 qemu_options = {
         # "aarch64":, TODO
-        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0'"],
-        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0'"],
-        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0'"],
+        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"],
+        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"],
+        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"],
         # "bfin":, TODO
         # "m68k-68xxx":, TODO 
-        "m68k-coldfire": ["m68k", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
+        "m68k-coldfire": ["m68k", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
         # "microblazebe":, TODO
-        "microblazeel": ["microblazeel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=tty0 rw physmap.enabled=0'"],
-        "mips32": ["mips", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0'"],
-        "mips32el": ["mipsel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0'"],
+        "microblazeel": ["microblazeel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=tty0 rw physmap.enabled=0 noapic'"],
+        "mips32": ["mips", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "mips32el": ["mipsel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
         # "mips32r5el":, TODO
         # "mips32r6el":, TODO
-        "mips64-n32": ["mips64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0'"],
-        "mips64el-n32": ["mips64el", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0'"],
+        "mips64-n32": ["mips64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "mips64el-n32": ["mips64el", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
         # "mips64r6el-n32":, TODO
-        "nios2": ["nios2", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
-        "powerpc64-e5500": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
-        "powerpc64-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
-        "powerpc64le-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
-        "sh-sh4": ["sh4", "-M r2d -serial vc -kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
+        "nios2": ["nios2", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "powerpc64-e5500": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "powerpc64-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "powerpc64le-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "sh-sh4": ["sh4", "-M r2d -serial vc -kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
         # "sparc64":, TODO
         # "sparcv8":, TODO
-        "x86-64-core-i7":["x86_64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
-        "x86-core2":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
-        "x86-i686":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0'"],
+        "x86-64-core-i7":["x86_64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "x86-core2":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
+        "x86-i686":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
         # "xtensa-lx60":, TODO
         }
+
+install_opkg = {
+        "armv5-eabi":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
+        "armv7-eabihf":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
+        "mips32":"""wget -O - http://pkg.entware.net/binaries/mipsel/installer/installer.sh | /bin/sh""",
+        "mips32el":"""wget -O - http://pkg.entware.net/binaries/mipsel/installer/installer.sh | /bin/sh""",
+        "x86-64-core-i7":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
+        "x86-core2":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
+        "x86-i686":"""wget -O - http://pkg.entware.net/binaries/x86-32/installer/entware_install.sh | /bin/sh""",
+}
 
 DIR = "arm_now/"
 KERNEL = DIR + "kernel"
@@ -64,6 +74,7 @@ ROOTFS = DIR + "rootfs.ext2"
 def maybe_you_meant(string, strings):
     return ' or '.join(difflib.get_close_matches(string, strings, cutoff=0.3))
 
+@exall(os.mkdir, FileExistsError, hide)
 def download(url, filename):
     print("\nDownloading {} from {}".format(filename, url))
     filename_cache = url.split('/')[-1]
@@ -76,8 +87,7 @@ def download(url, filename):
         print("Already downloaded")
         shutil.copyfile(filename_cache, filename)
     else:
-        with contextlib.suppress(FileExistsError):
-            os.mkdir(DOWNLOAD_CACHE_DIR)
+        os.mkdir(DOWNLOAD_CACHE_DIR)
         # wget.download(url, out=filename_cache)
         obj = SmartDL(url, filename_cache)
         obj.start()
@@ -114,7 +124,7 @@ def get_link_filetype(link):
     # os.kill(0, 9)
     return None
 
-def scrawl_kernel(arch="armv5-eabi"):
+def scrawl_kernel(arch):
     re_href = re.compile('href="?({arch}[^ <>"]*)"?'.format(arch=arch))
     url = "https://toolchains.bootlin.com/downloads/releases/toolchains/{arch}/test-system/".format(arch=arch)
     response = requests.get(url + "?C=M;O=D")
@@ -146,7 +156,6 @@ def run(arch, kernel, dtb, rootfs):
     arch = qemu_options[arch][0]
     print("Starting qemu-system-{}".format(arch))
     qemu_config = "-serial stdio -monitor /dev/null"
-    # qemu_config = ""
     cmd = """stty intr ^]
        qemu-system-{arch} {options} \
                -m 256M \
@@ -159,12 +168,12 @@ def run(arch, kernel, dtb, rootfs):
     print(cmd)
     os.system(cmd)
 
-def install(arch="x86-i686"):
+def install(arch):
     """ download and setup filesystem and kernel
     """
     if arch not in qemu_options:
         print("ERROR: I don't know this arch yet", file=sys.stderr)
-        print("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys())), file=sys.stderr)
+        print("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
         sys.exit(1)
     kernel, dtb, rootfs = scrawl_kernel(arch)
     if kernel is None or rootfs is None:
@@ -189,7 +198,7 @@ def avoid_parameter_injection(params):
             new_params.append(p)
     return new_params
 
-def add_script_to_ext2(rootfs, dest, script):
+def ext2_write_to_file(rootfs, dest, script):
     with tempfile.TemporaryDirectory() as tmpdirname:
         filename = tmpdirname + "/script"
         print(filename)
@@ -197,25 +206,36 @@ def add_script_to_ext2(rootfs, dest, script):
             F.write(script)
         subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') + [filename, rootfs + ":" + dest])
 
-def rm_to_ext2(rootfs, filename):
+def ext2_rm(rootfs, filename):
     subprocess.check_call(["e2rm", rootfs + ":" + filename])
 
-def config_filesystem(rootfs):
+def config_filesystem(rootfs, arch):
     filemagic = magic.from_file(rootfs)
     if "ext2" not in filemagic:
         print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
         return
     try:
-        rm_to_ext2(rootfs, '/etc/init.d/S40network')
-        rm_to_ext2(rootfs, '/etc/init.d/S90tests')
+        ext2_rm(rootfs, '/etc/init.d/S40network')
+        ext2_rm(rootfs, '/etc/init.d/S90tests')
+        ext2_rm(rootfs, '/etc/issue')
     except subprocess.CalledProcessError as e:
         print("WARNING: e2rm failed !!!")
-    add_script_to_ext2(rootfs, "/etc/init.d/S95_how_to_kill_qemu", 
+    ext2_write_to_file(rootfs, "/etc/issue", 
+            'Welcome to arm_now\n')
+    ext2_write_to_file(rootfs, "/etc/init.d/S95_how_to_kill_qemu", 
             'echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"\n')
-    add_script_to_ext2(rootfs, "/etc/init.d/S40_network","""
-                ifconfig eth0 10.0.2.15
-                route add default gw 10.0.2.2
-                echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
+    ext2_write_to_file(rootfs, "/etc/init.d/S40_network","""
+IFACE=$(ip a | grep -o ':.*: ' | grep -v ': lo: ' | grep -o '[^ :@]*' | head -n 1)
+ifconfig "$IFACE" 10.0.2.15
+route add default gw 10.0.2.2
+echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
+""")
+    if arch in install_opkg:
+        ext2_write_to_file(rootfs, "/root/install_pkg_manager.sh", f"""
+{install_opkg[arch]}
+opkg update""")
+        ext2_write_to_file(rootfs, "/etc/profile.d/opkg_path.sh", f"""
+export PATH=$PATH:/opt/bin:/opt/sbin
                 """)
 
 def add_local_files(rootfs, dest):
@@ -224,11 +244,8 @@ def add_local_files(rootfs, dest):
         print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
         return
     # TODO: check rootfs fs against parameter injection
-    add_script_to_ext2(rootfs, "/sbin/save", 
+    ext2_write_to_file(rootfs, "/sbin/save", 
             "cd /root\ntar cf /root.tar *\nsync\n")
-    # with open("/tmp/arm_now/save", "w") as F:
-    #     F.write()
-    # subprocess.check_call("e2cp -G 0 -O 0 -P 555 /tmp/arm_now/save".split(' ') + [rootfs + ":/sbin/"])
     print("Adding current directory to the filesystem..")
     with tempfile.TemporaryDirectory() as tmpdirname:
         files = [ i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-") ]
@@ -236,24 +253,13 @@ def add_local_files(rootfs, dest):
             tar = tmpdirname + "/current_directory.tar"
             subprocess.check_call(["tar", "cf", tar] + files)
             subprocess.check_call("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"])
-            add_script_to_ext2(rootfs, "/etc/init.d/S95_sync_current_diretory","""
+            ext2_write_to_file(rootfs, "/etc/init.d/S95_sync_current_diretory","""
                         cd /root
                         tar xf /current_directory.tar
                         rm /current_directory.tar
                         """)
-    # for root, dirs, files in os.walk("."):
-    #     if root == "./arm_now":
-    #         continue
-    #     if root.startswith("-"):
-    #         print("WARNING: parameter injection detected, '{}' will be ingored".format(root))
-    #         continue
-    #     files = avoid_parameter_injection(files)
-    #     # TODO check root security
-    #     files = [ root + "/" + f for f in files ]
-    #     if files:
-    #         subprocess.check_call("e2mkdir -G 0 -O 0".split(' ') + [ rootfs + ":" + dest + root ])
-    #         subprocess.check_call("e2cp -G 0 -O 0".split(' ') + files + [ rootfs + ":" + dest + "/" + root ])
 
+@exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
 def get_local_files(rootfs, src, dest):
     filemagic = magic.from_file(rootfs)
     if "ext2" not in filemagic:
@@ -261,8 +267,7 @@ def get_local_files(rootfs, src, dest):
         return
     subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
     if os.path.exists("root.tar"):
-        with contextlib.suppress(subprocess.CalledProcessError):
-            subprocess.check_call("tar xf root.tar".split(' '))
+        subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
     else:
         print("Use the 'save' command before exiting the vm to retrieve all files on the host")
@@ -303,52 +308,44 @@ def start(arch="", *, clean=False, sync=False):
         print("Supported architectures:")
         print(list_arch())
         raise clize.ArgumentError("no arch specified")
-        # sys.exit(1)
     check_dependencies()
     if clean:
         do_clean()
     install(arch)
-    config_filesystem(ROOTFS)
+    config_filesystem(ROOTFS, arch)
     if sync:
         add_local_files(ROOTFS, "/root")
     run(arch, KERNEL, DTB, ROOTFS)
     if sync:
         get_local_files(ROOTFS, "/root.tar", ".")
 
+@exall(os.unlink, FileExistsError, hide)
 def do_clean():
     """ Clean the filesystem.
     """
-    with contextlib.suppress(FileNotFoundError):
-        os.unlink(KERNEL)
-    with contextlib.suppress(FileNotFoundError):
-        os.unlink(DTB)
-    with contextlib.suppress(FileNotFoundError):
-        os.unlink(ROOTFS)
+    os.unlink(KERNEL)
+    os.unlink(DTB)
+    os.unlink(ROOTFS)
     shutil.rmtree(DIR, ignore_errors=True)
 
 def test_arch(arch):
     arch = arch[:-1]
-    # try:
     kernel, dtb, rootfs = scrawl_kernel(arch)
     if kernel and rootfs:
         print("{}: OK".format(arch))
-        # print("{arch}: OK\n\tkernel={kernel}\n\tdtb={dtb}\n\trootfs={rootfs}\n".format(arch=arch, kernel=kernel, dtb=dtb, rootfs=rootfs))
-    # except Exception as e:
-    #     print(e)
-    #     # print("{}: KO".format(arch))
-    #     pass
 
-def list_arch():
+def list_arch(all=False):
     """ List all compactible cpu architecture
     """
-    print('\n'.join(qemu_options.keys()))
-    # url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
-    # all_arch = indexof_parse(url)
-    # p = Pool(10)
-    # ret = p.map(test_arch, all_arch)
+    if not all:
+        print('\n'.join(qemu_options.keys()))
+    else:
+        url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
+        all_arch = indexof_parse(url)
+        p = Pool(10)
+        ret = p.map(test_arch, all_arch)
 
 def main():
-    # clize.run(install, start, clean, list_arch, test)
     clize.run({
         "start": start,
         "clean": do_clean,
@@ -358,8 +355,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# alternatives
-# buildroot
-# debootstrap
-# lxc/lxd

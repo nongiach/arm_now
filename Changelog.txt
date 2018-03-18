@@ -1,0 +1,24 @@
+--- Wed Feb 15 2017
+First commit
+arm only running on windows and linux host.
+dhcpd using scapy.
+
+--- Wed Feb 28 2018
+Move from makefile scripting to python.
+Now supporting arm, m68k, microblaze, mips, nios2, powerpc, sh4, x86
+
+--- Sat Mar 17 2018
+Add package manager.
+
+
+TODO:
+Fix static IP to use the right interface on all vm.
+A more flexible argument parsing.
+Add bridged network.
+Use dhcp.
+Refactor filesystem code.
+Add cpio filesystem full support (now --sync and host config is only supported
+		on ext2).
+Detect the current kernel arch and if it doesn't match the asked arch, exit
+smoothly.
+use etc/initab for automatic sync saving ?

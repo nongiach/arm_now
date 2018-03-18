@@ -12,3 +12,4 @@ rootfs*
 arm_now.egg-info/
 build/
 dist/
+**/__pycache__/
