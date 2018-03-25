@@ -12,6 +12,7 @@ setup(name='arm_now',
                 ],
             },
         install_requires=[
+            'exall',
             'requests',
             'clize',
             'pySmartDL',

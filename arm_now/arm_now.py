@@ -22,7 +22,7 @@ from pySmartDL import SmartDL
 import difflib
 import clize
 
-from .exall import exall, ignore, print_warning, print_traceback, print_error
+from exall import exall, ignore, print_warning, print_traceback, print_error
 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
