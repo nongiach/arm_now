@@ -27,39 +27,43 @@ from exall import exall, ignore, print_warning, print_traceback, print_error
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
 qemu_options = {
-        # "aarch64":, TODO
-        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"],
-        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"],
-        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"],
+	"aarch64": ["aarch64", "-M virt -cpu cortex-a57 -smp 1 -kernel {kernel} -append 'root=/dev/vda console=ttyAMA0' -netdev user,id=eth0 -device virtio-net-device,netdev=eth0 -drive file={rootfs},if=none,format=raw,id=hd0 -device virtio-blk-device,drive=hd0"],
+        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"], # check log
+        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"], # check log
+        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"], # check log
         # "bfin":, TODO
         # "m68k-68xxx":, TODO 
-        "m68k-coldfire": ["m68k", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        # "microblazebe":, TODO
-        "microblazeel": ["microblazeel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=tty0 rw physmap.enabled=0 noapic'"],
-        "mips32": ["mips", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "mips32el": ["mipsel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        # "mips32r5el":, TODO
-        # "mips32r6el":, TODO
-        "mips64-n32": ["mips64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "mips64el-n32": ["mips64el", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        # "mips64r6el-n32":, TODO
-        "nios2": ["nios2", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "powerpc64-e5500": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "powerpc64-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "powerpc64le-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "sh-sh4": ["sh4", "-M r2d -serial vc -kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        # "sparc64":, TODO
-        # "sparcv8":, TODO
-        "x86-64-core-i7":["x86_64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "x86-core2":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        "x86-i686":["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"],
-        # "xtensa-lx60":, TODO
+        "m68k-coldfire": ["m68k", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "microblazebe": ["microblaze", "-M petalogix-s3adsp1800 -kernel {kernel} -nographic"], # rootfs is inside the kernel file, but we also have a separated rootfs if needed
+        "microblazeel": ["microblazeel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=tty0 rw physmap.enabled=0 noapic'"], # check log
+        "mips32": ["mips", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "mips32el": ["mipsel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+	"mips32r5el": ["mipsel", "-machine malta -cpu P5600 -kernel {kernel} -drive file={rootfs},format=raw -append 'root=/dev/hda rw'"],
+        "mips32r6el": ["mipsel", "-M malta -cpu mips32r6-generic -kernel {kernel} -drive file={rootfs},format=raw -append root=/dev/hda -net nic,model=pcnet -net user"],
+        "mips64-n32": ["mips64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "mips64el-n32": ["mips64el", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        # "mips64r6el-n32":, TODO check log
+        # "mips64r6el-n32": ["mips64el", "-machine malta -kernel {kernel} -drive file={rootfs},format=raw -append 'root=/dev/hda rw console=ttyS0,'"], # check log
+        "nios2": ["nios2", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "powerpc64-e5500": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "powerpc64-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "powerpc64le-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        "sh-sh4": ["sh4", "-M r2d -serial vc -kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
+        # "sparc64":, TODO check log
+        # "sparc64": ["sparc64", "-M sun4u -kernel {kernel} -append 'root=/dev/sda console=ttyS0,115200' -drive file={rootfs},format=raw -net nic,model=e1000 -net user"], # this causes kernel crash
+        # ":sparcv8":, TODO, check log, 
+        # "sparcv8": ["sparc", "-machine SS-10 -kernel {kernel} -drive file={rootfs},format=raw -append 'root=/dev/sda console=ttyS0,115200' -net nic,model=lance -net user"], # error
+        # "x86-64-core-i7":["x86_64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # old
+        "x86-64-core-i7" : ["x86_64", "-M pc -kernel {kernel} -drive file={rootfs},if=virtio,format=raw -append 'root=/dev/vda rw console=ttyS0' -net nic,model=virtio -net user"],
+        # "x86-core2" : ["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic -net nic,model=virtio -net user'"],
+	"x86-core2": ["i386", "-M pc -kernel {kernel} -drive file={rootfs},if=virtio,format=raw -append 'root=/dev/vda rw console=ttyS0' -net nic,model=virtio -net user"], # fix opkg
+        "x86-i686":["i386", "-M pc -kernel {kernel} -drive file={rootfs},if=virtio,format=raw -append 'root=/dev/vda rw console=ttyS0' -net nic,model=virtio -net user"],
+        "xtensa-lx60": ["xtensa", "-M lx60 -cpu dc233c -monitor null -nographic -kernel {kernel} -monitor null"]
         }
 
 install_opkg = {
         "armv5-eabi":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
         "armv7-eabihf":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
-        "mips32":"""wget -O - http://pkg.entware.net/binaries/mipsel/installer/installer.sh | /bin/sh""",
         "mips32el":"""wget -O - http://pkg.entware.net/binaries/mipsel/installer/installer.sh | /bin/sh""",
         "x86-64-core-i7":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
         "x86-core2":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
@@ -168,6 +172,24 @@ def run(arch, kernel, dtb, rootfs):
     print(cmd)
     os.system(cmd)
 
+def is_already_created(arch):
+    """ if the current kernel and rootfs is not the same arch then delete them """
+    if not os.path.exists(DIR + "/arch"):
+        return False
+    with open(DIR + "/arch", "r") as F:
+        old_arch = F.read()
+    if old_arch == arch:
+        return True
+    response = input("(use --clean next time) Current directory contains a different arch, delete ? (y/n) ")
+    if not response.startswith("y"):
+        sys.exit(1)
+    do_clean()
+    with contextlib.suppress(FileNotFoundError):
+        os.mkdir(DIR)
+    with open(DIR + "/arch", "w") as F:
+        F.write(arch)
+    return False
+
 def install(arch):
     """ download and setup filesystem and kernel
     """
@@ -177,12 +199,11 @@ def install(arch):
         sys.exit(1)
     kernel, dtb, rootfs = scrawl_kernel(arch)
     if kernel is None or rootfs is None:
-        print("ERROR: could download files for this arch", file=sys.stderr)
+        print("ERROR: couldn't download files for this arch", file=sys.stderr)
         sys.exit(1)
-    try:
-        os.mkdir(DIR)
-    except FileExistsError as e:
-        print("{} exists, use --clean to restart with a fresh filesystem".format(DIR))
+    print("install before")
+    if is_already_created(arch):
+        print("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(DIR))
         return
     download(kernel, KERNEL)
     if dtb:
@@ -298,7 +319,7 @@ def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
 def start(arch="", *, clean=False, sync=False):
-    """Setup and starts a virtualmachine using qemu.
+    """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
     :param clean: Clean filesystem before starting.
@@ -319,7 +340,7 @@ def start(arch="", *, clean=False, sync=False):
     if sync:
         get_local_files(ROOTFS, "/root.tar", ".")
 
-@exall(os.unlink, FileExistsError, ignore)
+@exall(os.unlink, FileNotFoundError, ignore)
 def do_clean():
     """ Clean the filesystem.
     """
@@ -334,7 +355,7 @@ def test_arch(arch):
     if kernel and rootfs:
         print("{}: OK".format(arch))
 
-def list_arch(all=False):
+def list_arch(*, all=False):
     """ List all compactible cpu architecture
     """
     if not all:
@@ -345,6 +366,7 @@ def list_arch(all=False):
         p = Pool(10)
         ret = p.map(test_arch, all_arch)
 
+# @exall(clize.run, Exception, print_error)
 def main():
     clize.run({
         "start": start,

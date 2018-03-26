@@ -10,15 +10,20 @@ Now supporting arm, m68k, microblaze, mips, nios2, powerpc, sh4, x86
 --- Sat Mar 17 2018
 Add package manager.
 
+--- Mon Mar 26 2018
+Add support for aarch64, microblazebe, mips32r5el, mips32r6el, xtensa
+Fix static IP to use the right interface on all vm.
+Fix network interfaces
+Detect the current kernel arch and if it doesn't match the asked arch, prompt "clean?"
 
 TODO:
-Fix static IP to use the right interface on all vm.
+Search for new kernel and rootfs images, maybe I missed some of them that have ramfs inside the kernel image.
+real time shared folder using libvirt ?
+enable kvm for x86
+Add cpio filesystem full support (now --sync and host config is only supported
+Refactor filesystem code.
 A more flexible argument parsing.
 Add bridged network.
-Use dhcp.
-Refactor filesystem code.
-Add cpio filesystem full support (now --sync and host config is only supported
-		on ext2).
-Detect the current kernel arch and if it doesn't match the asked arch, exit
-smoothly.
+rootfs are mostly composed of null bytes, so we can download, preconfig, and compress all of them to gain speed.
+Use dhcp to connect several vm together
 use etc/initab for automatic sync saving ?
