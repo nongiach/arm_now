@@ -253,7 +253,10 @@ echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
     if arch in install_opkg:
         ext2_write_to_file(rootfs, "/root/install_pkg_manager.sh", f"""
 {install_opkg[arch]}
-opkg update""")
+opkg update
+echo -e '\n\n now you can $ opkg install gdb'
+rm /root/install_pkg_manager.sh
+""")
         ext2_write_to_file(rootfs, "/etc/profile.d/opkg_path.sh", f"""
 export PATH=$PATH:/opt/bin:/opt/sbin
                 """)
