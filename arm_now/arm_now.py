@@ -66,7 +66,7 @@ install_opkg = {
         "armv7-eabihf":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
         "mips32el":"""wget -O - http://pkg.entware.net/binaries/mipsel/installer/installer.sh | /bin/sh""",
         "x86-64-core-i7":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
-        "x86-core2":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
+        "x86-core2":"""wget -O - http://pkg.entware.net/binaries/x86-32/installer/entware_install.sh | /bin/sh""",
         "x86-i686":"""wget -O - http://pkg.entware.net/binaries/x86-32/installer/entware_install.sh | /bin/sh""",
 }
 
@@ -184,10 +184,6 @@ def is_already_created(arch):
     if not response.startswith("y"):
         sys.exit(1)
     do_clean()
-    with contextlib.suppress(FileNotFoundError):
-        os.mkdir(DIR)
-    with open(DIR + "/arch", "w") as F:
-        F.write(arch)
     return False
 
 def install(arch):
@@ -201,14 +197,17 @@ def install(arch):
     if kernel is None or rootfs is None:
         print("ERROR: couldn't download files for this arch", file=sys.stderr)
         sys.exit(1)
-    print("install before")
     if is_already_created(arch):
         print("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(DIR))
         return
+    with contextlib.suppress(FileExistsError):
+        os.mkdir(DIR)
     download(kernel, KERNEL)
     if dtb:
         download(dtb, DTB)
     download(rootfs, ROOTFS)
+    with open(DIR + "/arch", "w") as F:
+        F.write(arch)
 
 def avoid_parameter_injection(params):
     new_params = []
