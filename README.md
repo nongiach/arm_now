@@ -53,20 +53,29 @@ $ ls
 a_file_created_on_the_host a_file_create_on_the_guest
 ```
 
+# Install a package
+
+```
+$ arm_now start armv5-eabi
+$ ./install_pkg_manager.sh
+$ opkg install gdb
+$ opkg install python
+```
+This is not supported on all arch yet.
+
 # Supported
 
 | CPU | images |
 | --- | --- |
 | arm | armv5-eabi, armv6-eabihf, armv7-eabihf |
 | m68k | m68k-coldfire |
-| microblaze | microblazeel |
-| mips | mips32, mips32el, mips64-n32, mips64el-n32 |
+| microblaze | microblazeel, microblazebe |
+| mips | mips32, mips32el, mips32r5el, mips32r6el, xtensa, mips64-n32, mips64el-n32,  |
 | nios2 | nios2 |
 | powerpc | powerpc64-e5500, powerpc64-power8, powerpc64le-power8 |
 | sh4 | sh-sh4 |
 | x86 | x86-64-core-i7, x86-core2, x86-i686 |
-
-// TODO: add boot time to this array.
+| aarch64 | aarch64 |
 
 # Upcoming features
 
@@ -91,13 +100,14 @@ Yes, it's a real virtual machine we use qemu-system-\*. It's not a container or 
 
 I do this project as a hobby, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
 - A lot of cpu arch are still not supported, bfin, sparc, xtensa .., at line 28 of arm_now.py you will find a dict that you can play with to add new cpu arch.
-- setup network interfaces
 - add package manager (my next priority). opkg with https://wiki.openwrt.org/about/mirrors or http://pkg.entware.net/binaries/
 - full support of cpio rootfs
 - make a script based on buildroot that will compile every existing arch ? this sounds like hours of work :/
 - let the user choose the libc, (musl, glibc, uclibc)
 - allow the user to give any binary as input and start it in the right cpu arch, all dependencies should be automatically resolved and installed
-- add windows host support (checkout "old" branch)
+- use buildroot to compile gdb or gdbserver for all arch, have look at utils/test-pkg. strace, ltrace are a plus.
+- find mirrorlist / package manager for all arch.
+- add mac host support
 
 ## Who to thanks ?
 
