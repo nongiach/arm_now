@@ -1,9 +1,9 @@
 from setuptools import setup, Extension
 
 setup(name='arm_now',
-        version='1.0',
+        version='1.01',
         author='@chaign_c',
-        url='https://www.python.org/sigs/distutils-sig/',
+        url='https://github.com/nongiach/arm_now',
         packages=['arm_now'],
         py_modules=['arm_now'],
         entry_points = {

@@ -16,6 +16,9 @@ Fix static IP to use the right interface on all vm.
 Fix network interfaces
 Detect the current kernel arch and if it doesn't match the asked arch, prompt "clean?"
 
+--- Sun Apr 8 2018
+Fix the use of format string to be compatible with python3.5
+
 TODO:
 Search for new kernel and rootfs images, maybe I missed some of them that have ramfs inside the kernel image.
 real time shared folder using libvirt ?

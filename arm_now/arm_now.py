@@ -251,13 +251,13 @@ route add default gw 10.0.2.2
 echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
 """)
     if arch in install_opkg:
-        ext2_write_to_file(rootfs, "/root/install_pkg_manager.sh", f"""
+        ext2_write_to_file(rootfs, "/root/install_pkg_manager.sh", """
 {install_opkg[arch]}
 opkg update
 echo -e '\n\n now you can $ opkg install gdb'
 rm /root/install_pkg_manager.sh
-""")
-        ext2_write_to_file(rootfs, "/etc/profile.d/opkg_path.sh", f"""
+""".format(install_pkg=install_pkg))
+        ext2_write_to_file(rootfs, "/etc/profile.d/opkg_path.sh", """
 export PATH=$PATH:/opt/bin:/opt/sbin
                 """)
 
