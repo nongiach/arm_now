@@ -19,6 +19,9 @@ Detect the current kernel arch and if it doesn't match the asked arch, prompt "c
 --- Sun Apr 8 2018
 Fix the use of format string to be compatible with python3.5
 
+--- Thu Apr 12 2018
+Add tcp/udp --redir
+
 TODO:
 Search for new kernel and rootfs images, maybe I missed some of them that have ramfs inside the kernel image.
 real time shared folder using libvirt ?

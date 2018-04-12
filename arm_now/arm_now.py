@@ -15,6 +15,7 @@ import operator
 import subprocess
 import platform
 import tempfile
+import re
 
 # once cpio fully supported will we still need this magic ?
 import magic
@@ -154,12 +155,12 @@ def scrawl_kernel(arch):
     kernel = None if "kernel" not in links_dict[state][libc] else links_dict[state][libc]["kernel"]
     return kernel, dtb, rootfs
 
-def run(arch, kernel, dtb, rootfs):
+def run(arch, kernel, dtb, rootfs, redir):
     dtb = "" if not os.path.exists(dtb) else "-dtb {}".format(dtb)
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
     print("Starting qemu-system-{}".format(arch))
-    qemu_config = "-serial stdio -monitor /dev/null"
+    qemu_config = "-serial stdio -monitor /dev/null {redir}".format(redir=redir)
     cmd = """stty intr ^]
        qemu-system-{arch} {options} \
                -m 256M \
@@ -320,13 +321,25 @@ def check_dependencies():
 def test():
     get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
 
-def start(arch="", *, clean=False, sync=False):
+re_redir = re.compile(r"(tcp|udp):\d+::\d+")
+def parse_redir(redir):
+    qemu_redir = []
+    for r in redir:
+        if not re_redir.match(r):
+            print("example:")
+            print("\tredirect tcp host 8000 to guest 80: --redir tcp:8000::80")
+            print("\tredirect udp host 4444 to guest 44: --redir udp:4444::44")
+            raise clize.ArgumentError("Invalid argument: --redir {}".format(r))
+    return ''.join(map("-redir {} ".format, redir))
+
+def start(arch="", *, clean=False, sync=False, redir:(clize.parameters.multi(min=0, max=3))):
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
     :param clean: Clean filesystem before starting.
     :param sync: Sync le current directory with the guest.
     """
+    redir = parse_redir(redir)
     if not arch:
         print("Supported architectures:")
         print(list_arch())
@@ -338,7 +351,7 @@ def start(arch="", *, clean=False, sync=False):
     config_filesystem(ROOTFS, arch)
     if sync:
         add_local_files(ROOTFS, "/root")
-    run(arch, KERNEL, DTB, ROOTFS)
+    run(arch, KERNEL, DTB, ROOTFS, redir)
     if sync:
         get_local_files(ROOTFS, "/root.tar", ".")
 
