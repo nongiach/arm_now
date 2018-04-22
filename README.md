@@ -112,7 +112,7 @@ Folks around the world to safely fuzz a program without breaking the host, or ex
 | --- | --- |
 | [Aperikube](https://twitter.com/AperiKube) | http://www.aperikube.fr/docs/breizhctf_2018_mips/ |
 
-Ping me for any update.
+Ping me for any new writeups.
 
 ## How can I help ?
 
