@@ -49,7 +49,7 @@ a_file_created_on_the_host a_file_create_on_the_guest
 # save
 # poweroff
 ( back to host, you can also ctrl+] to kill qemu )
-$ ls
+# ls
 a_file_created_on_the_host a_file_create_on_the_guest
 ```
 
@@ -57,14 +57,14 @@ a_file_created_on_the_host a_file_create_on_the_guest
 
 ```
 $ arm_now start armv5-eabi
-$ ./install_pkg_manager.sh
-$ opkg list
-$ opkg install gdb
-$ opkg install gdb_legacy // for mips32el
-$ opkg install python
-$ opkg install strace
-$ opkg install binutils
-$ opkg install gcc // might need more disk space and not always available.
+# ./install_pkg_manager.sh
+# opkg list
+# opkg install gdb
+# opkg install gdb_legacy // for mips32el
+# opkg install python
+# opkg install strace
+# opkg install binutils
+# opkg install gcc // might need more disk space and not always available.
 ```
 This is not supported on all arch yet. Only mips32el, armv5-eabi, armv7-eabihf, and all x86 images.
 
