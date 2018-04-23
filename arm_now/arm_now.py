@@ -337,7 +337,7 @@ def start(arch="", *, clean=False, sync=False, redir:(clize.parameters.multi(min
 
     :param arch: The cpu architecture that will be started.
     :param redir: Redirect a host port to the guest.
-    :param resize: The cpu architecture that will be started.
+    :param offline: skip the checks for new images.
     :param clean: Clean filesystem before starting.
     :param sync: Sync le current directory with the guest.
     """
@@ -346,11 +346,11 @@ def start(arch="", *, clean=False, sync=False, redir:(clize.parameters.multi(min
         print("Supported architectures:")
         print(list_arch())
         raise clize.ArgumentError("no arch specified")
-    check_dependencies()
+        check_dependencies()
     if clean:
         do_clean()
-    install(arch)
-    config_filesystem(ROOTFS, arch)
+        install(arch)
+        config_filesystem(ROOTFS, arch)
     if sync:
         add_local_files(ROOTFS, "/root")
     run(arch, KERNEL, DTB, ROOTFS, redir)
