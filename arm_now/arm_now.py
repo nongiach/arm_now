@@ -332,7 +332,7 @@ def parse_redir(redir):
             raise clize.ArgumentError("Invalid argument: --redir {}".format(r))
     return ''.join(map("-redir {} ".format, redir))
 
-def start(arch="", *, clean=False, sync=False, redir:(clize.parameters.multi(min=0, max=3))):
+def start(arch="", *, clean=False, sync=False, offline=False, redir:(clize.parameters.multi(min=0, max=3))):
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
@@ -349,6 +349,7 @@ def start(arch="", *, clean=False, sync=False, redir:(clize.parameters.multi(min
         check_dependencies()
     if clean:
         do_clean()
+    if not offline:
         install(arch)
         config_filesystem(ROOTFS, arch)
     if sync:
