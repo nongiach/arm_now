@@ -22,7 +22,12 @@ Fix the use of format string to be compatible with python3.5
 --- Thu Apr 12 2018
 Add tcp/udp --redir
 
+--- Mon Apr 23 2018
+Add --offline and --resize option by @NoobieDog
+
 TODO:
+For --offline option check if local filesystem are avaiable otherwise exit cleanly and print a error message.
+For --resize option check with a regex if the parameter is correct to avoid command/parameter injection.
 Search for new kernel and rootfs images, maybe I missed some of them that have ramfs inside the kernel image.
 real time shared folder using libvirt ?
 enable kvm for x86
