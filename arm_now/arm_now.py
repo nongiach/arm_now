@@ -336,6 +336,8 @@ def start(arch="", *, clean=False, sync=False, redir:(clize.parameters.multi(min
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
+    :param redir: Redirect a host port to the guest.
+    :param resize: The cpu architecture that will be started.
     :param clean: Clean filesystem before starting.
     :param sync: Sync le current directory with the guest.
     """
@@ -364,6 +366,11 @@ def do_clean():
     os.unlink(ROOTFS)
     shutil.rmtree(DIR, ignore_errors=True)
 
+def do_resize(size):
+    """ Resize filesystem.
+    """
+    subprocess.check_call(["qemu-img", "resize", ROOTFS, size])
+
 def test_arch(arch):
     arch = arch[:-1]
     kernel, dtb, rootfs = scrawl_kernel(arch)
@@ -387,6 +394,7 @@ def main():
         "start": start,
         "clean": do_clean,
         "list": list_arch,
+        "resize": do_resize,
         "install": install
         })
 
