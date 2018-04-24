@@ -114,6 +114,9 @@ Folks around the world to safely fuzz a program without breaking the host, or ex
 
 Ping me for any new writeups.
 
+## Where can we talk about arm_now or fuzzing/exploit/reverse?
+Go on freenode irc and "/join #arm_now cpu".
+
 ## How can I help ?
 
 I do this project as a hobby, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
