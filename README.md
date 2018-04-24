@@ -1,9 +1,9 @@
 
 
 # arm_now
-arm_now is an easy way to instantly setup and start a virtual machine, a lot of CPU architectures are supported.
+arm_now is a qemu powered tool that allows instant setup of VM for testing binaries built for different CPU architectures.
 
-I mainly use this for security purpose (reverse/exploit).
+arm_now instantly deploys and starts a virtual machine when needed, I mainly use this for security purpose (reverse/exploit/fuzzing).
 
 ![Alt Text](https://github.com/nongiach/arm_now/blob/assets/arm_now.gif)
 
