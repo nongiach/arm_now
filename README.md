@@ -1,7 +1,7 @@
 
 
 # arm_now
-arm_now is a qemu powered tool that allows instant setup of VM for using/reversing binaries built for different CPU architectures.
+arm_now is a qemu powered tool that allows instant setup of VM for reversing/running binaries built for different CPU architectures.
 
 arm_now instantly deploys and starts a virtual machine when needed, I mainly use this for security purpose (reverse/exploit/fuzzing).
 
