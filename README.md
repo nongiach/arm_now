@@ -136,7 +136,7 @@ linux kernel, gcc, busybox, qemu, https://buildroot.org, https://toolchains.boot
 
 
 ----
-By [@chaign\_c][] [#HexpressoTeam][hexpresso].
+By [@chaignc][] [#HexpressoTeam][hexpresso].
 
 
 [hexpresso]:     https://hexpresso.github.io
