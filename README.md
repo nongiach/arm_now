@@ -140,4 +140,4 @@ By [@chaign\_c][] [#HexpressoTeam][hexpresso].
 
 
 [hexpresso]:     https://hexpresso.github.io
-[@chaign\_c]:    https://twitter.com/chaignc
+[@chaignc]:    https://twitter.com/chaignc
