@@ -414,6 +414,12 @@ def do_start(arch, clean, sync, offline, redir):
     if sync:
         add_local_files(ROOTFS, "/root")
     run(arch, KERNEL, DTB, ROOTFS, redir)
+    try:
+        subprocess.check_call(["e2fsck", "-vfy", ROOTFS])
+    except subprocess.CalledProcessError as e:
+        print(e)
+        if str(e).find("returned non-zero exit status 1."):
+            print("{c.orange}It's ok but next time poweroff{c.normal}".format(c=Color))
     if sync:
         get_local_files(ROOTFS, "/root.tar", ".")
 
@@ -436,6 +442,7 @@ def do_resize(size, correct):
     """ Resize filesystem.
     """
     subprocess.check_call(["qemu-img", "resize", ROOTFS, size])
+    subprocess.check_call(["resize2fs", ROOTFS])
     subprocess.check_call(["e2fsck", "-fy", ROOTFS])
     subprocess.check_call(["ls", "-lh", ROOTFS])
     print("{c.green}[+] Resized to {size}{c.normal}".format(size=size, c=Color))
