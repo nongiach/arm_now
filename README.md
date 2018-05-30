@@ -114,6 +114,12 @@ Folks around the world to safely fuzz a program without breaking the host, or ex
 
 Ping me for any new writeups.
 
+## Project using arm_now
+
+| Credit | link | Description |
+| --- | --- | --- |
+| [ixty](https://twitter.com/_ixty_) | https://github.com/ixty/mandibule | linux elf injector for x86 x86_64 arm arm64 |
+
 ## Where can we talk about arm_now or fuzzing/exploit/reverse?
 Go on freenode irc and "/join #arm_now cpu".
 
