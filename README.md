@@ -108,17 +108,17 @@ Folks around the world to safely fuzz a program without breaking the host, or ex
 
 ## Writeups
 
-| Credit | link |
+| Link | Credit |
 | --- | --- |
-| [Aperikube](https://twitter.com/AperiKube) | http://www.aperikube.fr/docs/breizhctf_2018_mips/ |
+| [MIPS binary exploitation challenge](http://www.aperikube.fr/docs/breizhctf_2018_mips/) | [Aperikube](https://twitter.com/AperiKube) |
 
 Ping me for any new writeups.
 
 ## Project using arm_now
 
-| Credit | link | Description |
-| --- | --- | --- |
-| [ixty](https://twitter.com/_ixty_) | https://github.com/ixty/mandibule | linux elf injector for x86 x86_64 arm arm64 |
+| Project | Credit |
+| --- | --- |
+| [Mandibule: linux elf injector for x86 x86_64 arm arm64](https://github.com/ixty/mandibule) | [ixty](https://twitter.com/_ixty_) |
 
 ## Where can we talk about arm_now or fuzzing/exploit/reverse?
 Go on freenode irc and "/join #arm_now cpu".
