@@ -1,6 +1,55 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#  ================ Start Argument Parsing ==============================
+"""arm_now.
+Usage:
+  arm_now list [--all]
+  arm_now start [arch] [--clean] [--sync] [--offline] [--redir=<port>]...
+  arm_now clean
+  arm_now resize <new_size> [--correct]
+  arm_now install [arch] [--clean]
+  arm_now -h | --help
+  arm_now --version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Commands:
+  list          List all available images for all cpu.
+  start         Start a vm with a <arch> cpu. (default: armv5-eabi)
+  resize        Resize the current rootfs. (example: resize 1G)
+  clean         Delete the current rootfs.
+  install       Install and config a rootfs for the given <arch>. (default: armv5-eabi)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Options:
+  --sync                        Synchronize the current directory with the vm home.
+  --redir protocol:host::guest  Redirect the host port to the guest (example: --redir tcp:8000::80)
+  --clean                       Clean the current image before starting.
+  --offline                     Start with zero internet request.
+  --correct                     Correct the filesystem.
+  -h --help                     Show this screen.
+  --version                     Show version.
+
+Defaults:
+  arch          Defaults to armv5-eabi.
+"""
+
+from docopt import docopt
+
+def main():
+    a = docopt(__doc__, version='arm_now 0.1')
+    if a["list"]:
+        do_list(a["--all"])
+    elif a["start"]:
+        do_start(a["<arch>"] or "armv5-eabi",
+                a["--clean"], a["--sync"], a["--offline"], a["--redir"])
+    elif a["clean"]:
+        do_clean()
+    elif a["resize"]:
+        do_resize(a["<new_size>"], a["--correct"])
+    elif a["install"]:
+        do_install(a["arch"] or "armv5-eabi", a["--clean"])
+
+#  ================ End Argument Parsing ==============================
+
 import urllib.request
 import requests
 import sys
@@ -187,9 +236,11 @@ def is_already_created(arch):
     do_clean()
     return False
 
-def install(arch):
+def do_install(arch, clean=False):
     """ download and setup filesystem and kernel
     """
+    if clean:
+        do_clean()
     if arch not in qemu_options:
         print("ERROR: I don't know this arch yet", file=sys.stderr)
         print("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
@@ -209,6 +260,7 @@ def install(arch):
     download(rootfs, ROOTFS)
     with open(DIR + "/arch", "w") as F:
         F.write(arch)
+    print("[+] Installed")
 
 def avoid_parameter_injection(params):
     new_params = []
@@ -262,6 +314,7 @@ rm /root/install_pkg_manager.sh
 export PATH=$PATH:/opt/bin:/opt/sbin
                 """)
 
+@exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
 def add_local_files(rootfs, dest):
     filemagic = magic.from_file(rootfs)
     if "ext2" not in filemagic:
@@ -270,7 +323,7 @@ def add_local_files(rootfs, dest):
     # TODO: check rootfs fs against parameter injection
     ext2_write_to_file(rootfs, "/sbin/save", 
             "cd /root\ntar cf /root.tar *\nsync\n")
-    print("Adding current directory to the filesystem..")
+    print("[+] Adding current directory to the filesystem..")
     with tempfile.TemporaryDirectory() as tmpdirname:
         files = [ i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-") ]
         if files:
@@ -332,7 +385,7 @@ def parse_redir(redir):
             raise clize.ArgumentError("Invalid argument: --redir {}".format(r))
     return ''.join(map("-redir {} ".format, redir))
 
-def start(arch="", *, clean=False, sync=False, offline=False, redir:(clize.parameters.multi(min=0, max=3))):
+def do_start(arch, clean, sync, offline, redir):
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
@@ -341,6 +394,12 @@ def start(arch="", *, clean=False, sync=False, offline=False, redir:(clize.param
     :param clean: Clean filesystem before starting.
     :param sync: Sync le current directory with the guest.
     """
+    print("start")
+    print(f"arch {arch}")
+    print(f"clean {clean}")
+    print(f"sync {sync}")
+    print(f"offline {offline}")
+    print(f"redir {redir}")
     redir = parse_redir(redir)
     if not arch:
         print("Supported architectures:")
@@ -350,7 +409,7 @@ def start(arch="", *, clean=False, sync=False, offline=False, redir:(clize.param
     if clean:
         do_clean()
     if not offline:
-        install(arch)
+        do_install(arch)
         config_filesystem(ROOTFS, arch)
     if sync:
         add_local_files(ROOTFS, "/root")
@@ -367,10 +426,22 @@ def do_clean():
     os.unlink(ROOTFS)
     shutil.rmtree(DIR, ignore_errors=True)
 
-def do_resize(size):
+class Color:
+    orange = "\x1B[33m"
+    green = "\x1B[32m"
+    red = "\x1B[31m"
+    normal = "\x1B[0m"
+
+def do_resize(size, correct):
     """ Resize filesystem.
     """
     subprocess.check_call(["qemu-img", "resize", ROOTFS, size])
+    subprocess.check_call(["e2fsck", "-fy", ROOTFS])
+    subprocess.check_call(["ls", "-lh", ROOTFS])
+    print("{c.green}[+] Resized to {size}{c.normal}".format(size=size, c=Color))
+    if correct:
+        print("{c.orange}[+] Correcting ... (be patient){c.normal}".format(size=size, c=Color))
+        subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [ROOTFS])
 
 def test_arch(arch):
     arch = arch[:-1]
@@ -378,7 +449,7 @@ def test_arch(arch):
     if kernel and rootfs:
         print("{}: OK".format(arch))
 
-def list_arch(*, all=False):
+def do_list(all=False):
     """ List all compactible cpu architecture
     """
     if not all:
@@ -388,16 +459,6 @@ def list_arch(*, all=False):
         all_arch = indexof_parse(url)
         p = Pool(10)
         ret = p.map(test_arch, all_arch)
-
-# @exall(clize.run, Exception, print_error)
-def main():
-    clize.run({
-        "start": start,
-        "clean": do_clean,
-        "list": list_arch,
-        "resize": do_resize,
-        "install": install
-        })
 
 if __name__ == "__main__":
     main()
