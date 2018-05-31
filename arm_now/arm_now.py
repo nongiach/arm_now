@@ -5,10 +5,10 @@
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [arch] [--clean] [--sync] [--offline] [--redir=<port>]...
+  arm_now start [<arch>] [--clean] [--sync] [--offline] [--redir=<port>]...
   arm_now clean
   arm_now resize <new_size> [--correct]
-  arm_now install [arch] [--clean]
+  arm_now install [<arch>] [--clean]
   arm_now -h | --help
   arm_now --version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,7 +46,7 @@ def main():
     elif a["resize"]:
         do_resize(a["<new_size>"], a["--correct"])
     elif a["install"]:
-        do_install(a["arch"] or "armv5-eabi", a["--clean"])
+        do_install(a["<arch>"] or "armv5-eabi", a["--clean"])
 
 #  ================ End Argument Parsing ==============================
 
@@ -63,15 +63,13 @@ import contextlib
 import operator
 import subprocess
 import platform
-import tempfile
 import re
 
 # once cpio fully supported will we still need this magic ?
 import magic
-from pySmartDL import SmartDL
-import difflib
 import clize
 
+from utils import *
 from exall import exall, ignore, print_warning, print_traceback, print_error
 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
@@ -124,28 +122,6 @@ DIR = "arm_now/"
 KERNEL = DIR + "kernel"
 DTB = DIR + "dtb"
 ROOTFS = DIR + "rootfs.ext2"
-
-def maybe_you_meant(string, strings):
-    return ' or '.join(difflib.get_close_matches(string, strings, cutoff=0.3))
-
-@exall(os.mkdir, FileExistsError, ignore)
-def download(url, filename):
-    print("\nDownloading {} from {}".format(filename, url))
-    filename_cache = url.split('/')[-1]
-    filename_cache = ''.join([ c for c in filename_cache if c.isdigit() or c.isalpha() ])
-    filename_cache = DOWNLOAD_CACHE_DIR + "/" + filename_cache
-    print(filename_cache)
-    if os.path.exists(filename):
-        print("Filexists")
-    elif os.path.exists(filename_cache):
-        print("Already downloaded")
-        shutil.copyfile(filename_cache, filename)
-    else:
-        os.mkdir(DOWNLOAD_CACHE_DIR)
-        # wget.download(url, out=filename_cache)
-        obj = SmartDL(url, filename_cache)
-        obj.start()
-        shutil.copyfile(filename_cache, filename)
 
 def indexof_parse(url):
     re_href = re.compile('\[DIR\].*href="?([^ <>"]*)"?')
@@ -254,33 +230,13 @@ def do_install(arch, clean=False):
         return
     with contextlib.suppress(FileExistsError):
         os.mkdir(DIR)
-    download(kernel, KERNEL)
+    download(kernel, KERNEL, DOWNLOAD_CACHE_DIR)
     if dtb:
-        download(dtb, DTB)
-    download(rootfs, ROOTFS)
+        download(dtb, DTB, DOWNLOAD_CACHE_DIR)
+    download(rootfs, ROOTFS, DOWNLOAD_CACHE_DIR)
     with open(DIR + "/arch", "w") as F:
         F.write(arch)
     print("[+] Installed")
-
-def avoid_parameter_injection(params):
-    new_params = []
-    for p in params:
-        if p.startswith("-"):
-            print("WARNING: parameter injection detected, '{}' will be ingored".format(p))
-        else:
-            new_params.append(p)
-    return new_params
-
-def ext2_write_to_file(rootfs, dest, script):
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        filename = tmpdirname + "/script"
-        print(filename)
-        with open(filename, "w") as F:
-            F.write(script)
-        subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') + [filename, rootfs + ":" + dest])
-
-def ext2_rm(rootfs, filename):
-    subprocess.check_call(["e2rm", rootfs + ":" + filename])
 
 def config_filesystem(rootfs, arch):
     filemagic = magic.from_file(rootfs)
@@ -314,28 +270,6 @@ rm /root/install_pkg_manager.sh
 export PATH=$PATH:/opt/bin:/opt/sbin
                 """)
 
-@exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
-def add_local_files(rootfs, dest):
-    filemagic = magic.from_file(rootfs)
-    if "ext2" not in filemagic:
-        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
-        return
-    # TODO: check rootfs fs against parameter injection
-    ext2_write_to_file(rootfs, "/sbin/save", 
-            "cd /root\ntar cf /root.tar *\nsync\n")
-    print("[+] Adding current directory to the filesystem..")
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        files = [ i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-") ]
-        if files:
-            tar = tmpdirname + "/current_directory.tar"
-            subprocess.check_call(["tar", "cf", tar] + files)
-            subprocess.check_call("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"])
-            ext2_write_to_file(rootfs, "/etc/init.d/S95_sync_current_diretory","""
-                        cd /root
-                        tar xf /current_directory.tar
-                        rm /current_directory.tar
-                        """)
-
 @exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
 def get_local_files(rootfs, src, dest):
     filemagic = magic.from_file(rootfs)
@@ -348,19 +282,6 @@ def get_local_files(rootfs, src, dest):
         os.unlink("root.tar")
     else:
         print("Use the 'save' command before exiting the vm to retrieve all files on the host")
-
-distribution = platform.linux_distribution()[0].lower()
-
-def which(filename, **kwargs):
-    try:
-        subprocess.check_output(["which", filename])
-        return True
-    except subprocess.CalledProcessError:
-        if distribution in kwargs:
-            print(kwargs[distribution])
-        else:
-            print(kwargs["ubuntu"])
-        return False
 
 def check_dependencies():
     dependencies = [
@@ -415,11 +336,12 @@ def do_start(arch, clean, sync, offline, redir):
         add_local_files(ROOTFS, "/root")
     run(arch, KERNEL, DTB, ROOTFS, redir)
     try:
+        print(" Checking the filesystem ".center(80, "+"))
         subprocess.check_call(["e2fsck", "-vfy", ROOTFS])
     except subprocess.CalledProcessError as e:
         print(e)
         if str(e).find("returned non-zero exit status 1."):
-            print("{c.orange}It's ok but next time poweroff{c.normal}".format(c=Color))
+            porange("It's ok but next time poweroff")
     if sync:
         get_local_files(ROOTFS, "/root.tar", ".")
 
@@ -432,12 +354,6 @@ def do_clean():
     os.unlink(ROOTFS)
     shutil.rmtree(DIR, ignore_errors=True)
 
-class Color:
-    orange = "\x1B[33m"
-    green = "\x1B[32m"
-    red = "\x1B[31m"
-    normal = "\x1B[0m"
-
 def do_resize(size, correct):
     """ Resize filesystem.
     """
@@ -445,9 +361,9 @@ def do_resize(size, correct):
     subprocess.check_call(["resize2fs", ROOTFS])
     subprocess.check_call(["e2fsck", "-fy", ROOTFS])
     subprocess.check_call(["ls", "-lh", ROOTFS])
-    print("{c.green}[+] Resized to {size}{c.normal}".format(size=size, c=Color))
+    pgreen("[+] Resized to {size}".format(size=size))
     if correct:
-        print("{c.orange}[+] Correcting ... (be patient){c.normal}".format(size=size, c=Color))
+        porange("[+] Correcting ... (be patient)".format(size=size))
         subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [ROOTFS])
 
 def test_arch(arch):
