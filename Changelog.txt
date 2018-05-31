@@ -30,8 +30,11 @@ Correct --resize
 Fix bug with trying to sync big files
 Migrate from clize to docopt
 Refactor utils functions
+Disable audio to gain boot speed
+
 
 TODO:
+Unit test
 For --offline option check if local filesystem are avaiable otherwise exit cleanly and print a error message.
 For --resize option check with a regex if the parameter is correct to avoid command/parameter injection.
 Search for new kernel and rootfs images, maybe I missed some of them that have ramfs inside the kernel image.

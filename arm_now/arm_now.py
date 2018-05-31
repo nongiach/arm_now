@@ -195,7 +195,7 @@ def run(arch, kernel, dtb, rootfs, redir):
                -no-reboot
        stty intr ^c
     """.format(arch=arch, qemu_config=qemu_config, options=options, dtb=dtb)
-    print(cmd)
+    pgreen(cmd)
     os.system(cmd)
 
 def is_already_created(arch):
