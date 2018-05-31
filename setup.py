@@ -4,8 +4,8 @@ setup(name='arm_now',
         version='1.01',
         author='@chaign_c',
         url='https://github.com/nongiach/arm_now',
-        packages=['arm_now', 'utils'],
-        py_modules=['arm_now'],
+        packages=['arm_now'],
+        py_modules=['arm_now', 'utils'],
         entry_points = {
             'console_scripts': [
                 'arm_now = arm_now:main',
