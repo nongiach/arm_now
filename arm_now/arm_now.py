@@ -35,7 +35,7 @@ Defaults:
 from docopt import docopt
 
 def main():
-    a = docopt(__doc__, version='arm_now 0.1')
+    a = docopt(__doc__, version='arm_now 1.2')
     if a["list"]:
         do_list(a["--all"])
     elif a["start"]:
@@ -186,6 +186,7 @@ def run(arch, kernel, dtb, rootfs, redir):
     print("Starting qemu-system-{}".format(arch))
     qemu_config = "-serial stdio -monitor /dev/null {redir}".format(redir=redir)
     cmd = """stty intr ^]
+       export QEMU_AUDIO_DRV="none"
        qemu-system-{arch} {options} \
                -m 256M \
                -nographic \
