@@ -68,7 +68,7 @@ import re
 
 import clize
 
-from utils import *
+from .utils import *
 from exall import exall, ignore, print_warning, print_traceback, print_error
 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
@@ -205,6 +205,7 @@ def is_already_created(arch):
         old_arch = F.read()
     if old_arch == arch:
         return True
+    # response = input("(use --clean next time) Current directory contains a different arch ({}), delete ? (y/n) ".format(old_arch))
     response = input("(use --clean next time) An {} image exists, delete ? (y/n) ".format(old_arch))
     if not response.startswith("y"):
         sys.exit(1)
