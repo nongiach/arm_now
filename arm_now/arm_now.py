@@ -63,10 +63,9 @@ import contextlib
 import operator
 import subprocess
 import platform
+import tempfile
 import re
 
-# once cpio fully supported will we still need this magic ?
-import magic
 import clize
 
 from utils import *
@@ -206,7 +205,7 @@ def is_already_created(arch):
         old_arch = F.read()
     if old_arch == arch:
         return True
-    response = input("(use --clean next time) Current directory contains a different arch, delete ? (y/n) ")
+    response = input("(use --clean next time) An {} image exists, delete ? (y/n) ".format(old_arch))
     if not response.startswith("y"):
         sys.exit(1)
     do_clean()
@@ -218,15 +217,15 @@ def do_install(arch, clean=False):
     if clean:
         do_clean()
     if arch not in qemu_options:
-        print("ERROR: I don't know this arch yet", file=sys.stderr)
-        print("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
+        pred("ERROR: I don't know this arch yet", file=sys.stderr)
+        porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
         sys.exit(1)
     kernel, dtb, rootfs = scrawl_kernel(arch)
     if kernel is None or rootfs is None:
-        print("ERROR: couldn't download files for this arch", file=sys.stderr)
+        pred("ERROR: couldn't download files for this arch", file=sys.stderr)
         sys.exit(1)
     if is_already_created(arch):
-        print("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(DIR))
+        porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(DIR))
         return
     with contextlib.suppress(FileExistsError):
         os.mkdir(DIR)
@@ -239,9 +238,7 @@ def do_install(arch, clean=False):
     print("[+] Installed")
 
 def config_filesystem(rootfs, arch):
-    filemagic = magic.from_file(rootfs)
-    if "ext2" not in filemagic:
-        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
+    if not is_ext2(rootfs):
         return
     try:
         ext2_rm(rootfs, '/etc/init.d/S40network')
@@ -272,9 +269,7 @@ export PATH=$PATH:/opt/bin:/opt/sbin
 
 @exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
 def get_local_files(rootfs, src, dest):
-    filemagic = magic.from_file(rootfs)
-    if "ext2" not in filemagic:
-        print("{}\nthis filetype is not fully supported yet, but this will boot".format(filemagic))
+    if not is_ext2(rootfs):
         return
     subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
     if os.path.exists("root.tar"):
@@ -315,12 +310,6 @@ def do_start(arch, clean, sync, offline, redir):
     :param clean: Clean filesystem before starting.
     :param sync: Sync le current directory with the guest.
     """
-    print("start")
-    print(f"arch {arch}")
-    print(f"clean {clean}")
-    print(f"sync {sync}")
-    print(f"offline {offline}")
-    print(f"redir {redir}")
     redir = parse_redir(redir)
     if not arch:
         print("Supported architectures:")
