@@ -9,7 +9,7 @@ arm_now instantly deploys and starts a virtual machine when needed, I mainly use
 
 # Install
 ```sh
-# pip3 install https://github.com/nongiach/arm_now/archive/master.zip
+# pip3 install https://github.com/nongiach/arm_now/archive/master.zip --upgrade
 ```
 
 # Start an arm Virtual Machine
