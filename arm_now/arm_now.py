@@ -349,8 +349,8 @@ def do_resize(size, correct):
     """ Resize filesystem.
     """
     subprocess.check_call(["qemu-img", "resize", ROOTFS, size])
-    subprocess.check_call(["resize2fs", ROOTFS])
     subprocess.check_call(["e2fsck", "-fy", ROOTFS])
+    subprocess.check_call(["resize2fs", ROOTFS])
     subprocess.check_call(["ls", "-lh", ROOTFS])
     pgreen("[+] Resized to {size}".format(size=size))
     if correct:
