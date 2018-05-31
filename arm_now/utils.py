@@ -104,7 +104,7 @@ def add_local_files(rootfs, dest):
     with tempfile.TemporaryDirectory() as tmpdirname:
         files = [ i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-") ]
         if files:
-            tar = tmpdirname + "/current_directory.tar"
+            oar = tmpdirname + "/current_directory.tar"
             subprocess.check_call(["tar", "cf", tar] + files)
             subprocess.check_call("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"])
             ext2_write_to_file(rootfs, "/etc/init.d/S95_sync_current_diretory","""

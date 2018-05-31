@@ -5,7 +5,7 @@
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [<arch>] [--clean] [--sync] [--offline] [--redir=<port>]... [--add-qemu-options=<options>]
+  arm_now start [<arch>] [--clean] [--sync] [--offline] [--add-qemu-options=<options>] [--redir=<port>]... 
   arm_now clean
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean]
@@ -23,7 +23,8 @@ Options:
   --sync                        Synchronize the current directory with the vm home.
   --redir protocol:host::guest  Redirect the host port to the guest (example: --redir tcp:8000::80)
   --clean                       Clean the current image before starting.
-  --add-qemu-options=<options>  Add options to qemu-system-<arch>. (example: --add-qemu-options="-no-reboot")
+  --add-qemu-options=<options>  Add options to qemu-system-<arch>.
+                     (example: --add-qemu-options="-sandbox on" to Enable seccomp mode 2 system call filter )
   --offline                     Start with zero internet request.
   --correct                     Correct the filesystem.
   -h --help                     Show this screen.
@@ -42,7 +43,7 @@ def main():
     elif a["start"]:
         do_start(a["<arch>"] or "armv5-eabi",
                 a["--clean"], a["--sync"], a["--offline"], a["--redir"],
-                a["--add-qemu-options"])
+                ' '.join(a["--add-qemu-options"]))
     elif a["clean"]:
         do_clean()
     elif a["resize"]:
@@ -179,12 +180,12 @@ def scrawl_kernel(arch):
     kernel = None if "kernel" not in links_dict[state][libc] else links_dict[state][libc]["kernel"]
     return kernel, dtb, rootfs
 
-def run(arch, kernel, dtb, rootfs, redir):
+def run(arch, kernel, dtb, rootfs, add_qemu_options):
     dtb = "" if not os.path.exists(dtb) else "-dtb {}".format(dtb)
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
     print("Starting qemu-system-{}".format(arch))
-    qemu_config = "-serial stdio -monitor /dev/null {redir}".format(redir=redir)
+    qemu_config = "-serial stdio -monitor /dev/null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
     cmd = """stty intr ^]
        export QEMU_AUDIO_DRV="none"
        qemu-system-{arch} {options} \
@@ -314,9 +315,9 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options):
     :param sync: Sync le current directory with the guest.
     """
     redir = parse_redir(redir)
+    add_qemu_options += " " + redir
     print("o" * 40)
     print(add_qemu_options)
-    print(redir)
     if not arch:
         print("Supported architectures:")
         print(list_arch())
@@ -330,7 +331,7 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options):
         config_filesystem(ROOTFS, arch)
     if sync:
         add_local_files(ROOTFS, "/root")
-    run(arch, KERNEL, DTB, ROOTFS, redir)
+    run(arch, KERNEL, DTB, ROOTFS, add_qemu_options)
     try:
         print(" Checking the filesystem ".center(80, "+"))
         subprocess.check_call(["e2fsck", "-vfy", ROOTFS])

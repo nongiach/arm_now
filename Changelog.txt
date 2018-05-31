@@ -32,10 +32,17 @@ Migrate from clize to docopt
 Refactor utils functions
 Disable audio to gain boot speed
 Add colors
+Add -add-qemu-options
 
 
 TODO:
-Add a project page describing every options, --redir .. 
+find binary-samples/ -type f |tee filelist | e2cp -apv -d arm_now/rootfs.ext2:/
+10.0.2.2 is the host ip
+use mkisofs or genisoimage to create an iso from a folder. 
+https://unix.stackexchange.com/questions/90793/create-iso-image-from-folder-via-terminal-commands
+sudo mount -o loop output_image.iso iso/
+
+Add a wiki page describing every options, --redir ..  and use of alias
 Unit test
 For --offline option check if local filesystem are avaiable otherwise exit cleanly and print a error message.
 For --resize option check with a regex if the parameter is correct to avoid command/parameter injection.
