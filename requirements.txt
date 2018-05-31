@@ -1,4 +1,4 @@
-exall==1.0
-requests==2.18.4
-clize==4.0.3
-pySmartDL==1.2.5
+exall>=0.11
+requests>=2.18.4
+pySmartDL>=1.2.5
+docopt>=0.6.2

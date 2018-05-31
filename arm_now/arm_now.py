@@ -5,7 +5,7 @@
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [<arch>] [--clean] [--sync] [--offline] [--redir=<port>]...
+  arm_now start [<arch>] [--clean] [--sync] [--offline] [--redir=<port>]... [--add-qemu-options=<options>]
   arm_now clean
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean]
@@ -23,6 +23,7 @@ Options:
   --sync                        Synchronize the current directory with the vm home.
   --redir protocol:host::guest  Redirect the host port to the guest (example: --redir tcp:8000::80)
   --clean                       Clean the current image before starting.
+  --add-qemu-options=<options>  Add options to qemu-system-<arch>. (example: --add-qemu-options="-no-reboot")
   --offline                     Start with zero internet request.
   --correct                     Correct the filesystem.
   -h --help                     Show this screen.
@@ -40,7 +41,8 @@ def main():
         do_list(a["--all"])
     elif a["start"]:
         do_start(a["<arch>"] or "armv5-eabi",
-                a["--clean"], a["--sync"], a["--offline"], a["--redir"])
+                a["--clean"], a["--sync"], a["--offline"], a["--redir"],
+                a["--add-qemu-options"])
     elif a["clean"]:
         do_clean()
     elif a["resize"]:
@@ -65,8 +67,6 @@ import subprocess
 import platform
 import tempfile
 import re
-
-import clize
 
 from .utils import *
 from exall import exall, ignore, print_warning, print_traceback, print_error
@@ -278,7 +278,7 @@ def get_local_files(rootfs, src, dest):
         subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
     else:
-        print("Use the 'save' command before exiting the vm to retrieve all files on the host")
+        pgreen("Use the 'save' command before exiting the vm to retrieve all files on the host")
 
 def check_dependencies():
     dependencies = [
@@ -297,13 +297,14 @@ def parse_redir(redir):
     qemu_redir = []
     for r in redir:
         if not re_redir.match(r):
+            pred("ERROR: Invalid argument: --redir {}".format(r))
             print("example:")
             print("\tredirect tcp host 8000 to guest 80: --redir tcp:8000::80")
             print("\tredirect udp host 4444 to guest 44: --redir udp:4444::44")
-            raise clize.ArgumentError("Invalid argument: --redir {}".format(r))
+            sys.exit(1)
     return ''.join(map("-redir {} ".format, redir))
 
-def do_start(arch, clean, sync, offline, redir):
+def do_start(arch, clean, sync, offline, redir, add_qemu_options):
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
@@ -313,11 +314,15 @@ def do_start(arch, clean, sync, offline, redir):
     :param sync: Sync le current directory with the guest.
     """
     redir = parse_redir(redir)
+    print("o" * 40)
+    print(add_qemu_options)
+    print(redir)
     if not arch:
         print("Supported architectures:")
         print(list_arch())
-        raise clize.ArgumentError("no arch specified")
-        check_dependencies()
+        pred("ERROR: no arch specified")
+        sys.exit(1)
+    check_dependencies()
     if clean:
         do_clean()
     if not offline:
