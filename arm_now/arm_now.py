@@ -9,6 +9,7 @@ Usage:
   arm_now clean
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean]
+  arm_now show
   arm_now -h | --help
   arm_now --version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -339,9 +340,15 @@ def do_show():
         return
     with open(Config.ARCH) as F:
         arch = F.read()
+    print(" Info ".center(80, "~"))
     size = os.path.getsize(Config.ROOTFS)
     pgreen("arch         = {}".format(arch))
-    pgreen("rootfs size  = {}M".format(size // 1024))
+    pgreen("rootfs size  = {}M".format(size // (1024 * 1024) ))
+    ls_cmd = ["e2ls", Config.ROOTFS + ":/root"]
+    print((" " + " ".join(ls_cmd) + " ").center(80, "~"))
+    subprocess.check_call(ls_cmd)
+    print("~" * 80)
+
 
 if __name__ == "__main__":
     main()

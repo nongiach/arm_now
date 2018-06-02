@@ -30,13 +30,20 @@ Correct --resize
 Fix bug with trying to sync big files
 Migrate from clize to docopt
 Refactor utils functions
+Refactor filesystem, config, options functions
 Disable audio to gain boot speed
 Add colors
 Add -add-qemu-options
+Add show command
 
 
 TODO:
 Add a new features sections
+	autostart
+	resize
+	show
+	https
+
 find binary-samples/ -type f |tee filelist | e2cp -apv -d arm_now/rootfs.ext2:/
 10.0.2.2 is the host ip
 use mkisofs or genisoimage to create an iso from a folder. 
