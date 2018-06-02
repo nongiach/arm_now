@@ -36,6 +36,7 @@ Add -add-qemu-options
 
 
 TODO:
+Add a new features sections
 find binary-samples/ -type f |tee filelist | e2cp -apv -d arm_now/rootfs.ext2:/
 10.0.2.2 is the host ip
 use mkisofs or genisoimage to create an iso from a folder. 

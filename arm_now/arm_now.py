@@ -5,7 +5,7 @@
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [<arch>] [--clean] [--sync] [--offline] [--add-qemu-options=<options>] [--redir=<port>]... 
+  arm_now start [<arch>] [--clean] [--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--redir=<port>]... 
   arm_now clean
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean]
@@ -25,8 +25,12 @@ Options:
   --clean                       Clean the current image before starting.
   --add-qemu-options=<options>  Add options to qemu-system-<arch>.
                      (example: --add-qemu-options="-sandbox on" to Enable seccomp mode 2 system call filter )
+  --autostart=<script>          At startup <script> is uploaded and executed inside the vm.
+  --syncpath=<path>             Synchronize the <path> directory with the vm home.
+  --syncroot=<path>             Synchronize the <path> directory with the vm root.
+                            (Only if you need to modify the linux vm config)
   --offline                     Start with zero internet request.
-  --correct                     Correct the filesystem.
+  --correct                     Correct the filesystem after resize.
   -h --help                     Show this screen.
   --version                     Show version.
 
@@ -43,7 +47,8 @@ def main():
     elif a["start"]:
         do_start(a["<arch>"] or "armv5-eabi",
                 a["--clean"], a["--sync"], a["--offline"], a["--redir"],
-                ' '.join(a["--add-qemu-options"]))
+                ' '.join(a["--add-qemu-options"]),
+                a["--autostart"])
     elif a["clean"]:
         do_clean()
     elif a["resize"]:
@@ -305,7 +310,7 @@ def parse_redir(redir):
             sys.exit(1)
     return ''.join(map("-redir {} ".format, redir))
 
-def do_start(arch, clean, sync, offline, redir, add_qemu_options):
+def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
@@ -331,6 +336,12 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options):
         config_filesystem(ROOTFS, arch)
     if sync:
         add_local_files(ROOTFS, "/root")
+    if autostart:
+        print("AUTOSTART: {autostart}".format(autostart=autostart))
+        subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') +
+                [autostart, ROOTFS + ":/etc/init.d/S90_user_autostart"])
+    else:
+        ext2_rm(ROOTFS, "/etc/init.d/S90_user_autostart")
     run(arch, KERNEL, DTB, ROOTFS, add_qemu_options)
     try:
         print(" Checking the filesystem ".center(80, "+"))
