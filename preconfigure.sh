@@ -2,12 +2,13 @@ cd ../
 rm -rf preconfig
 mkdir preconfig
 cd preconfig
-arm_now clean
+arm_now install --clean
+arm_now resize 200M
 mkdir cacert
 cd cacert
 curl https://curl.haxx.se/ca/cacert.pem | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "cert" n ".pem"}'
 cd -
-cat <<EOF>>autostart.sh
+cat <<EOF>>config_ssl.sh
 cd /root
 if [[ -e ./install_pkg_manager.sh ]]
 then
@@ -31,5 +32,5 @@ fi
 poweroff
 EOF
 
-arm_now start --autostart autostart.sh --sync
+arm_now start --autostart config_ssl.sh --sync
 # openssl-util

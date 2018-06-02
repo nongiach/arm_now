@@ -39,9 +39,13 @@ Defaults:
 """
 
 from docopt import docopt
+import os
 
 def main():
     a = docopt(__doc__, version='arm_now 1.2')
+    if not a["<arch>"] and os.path.isfile(Config.ARCH):
+        with open(Config.ARCH) as F:
+            a["<arch>"] = F.read()
     if a["list"]:
         do_list(a["--all"])
     elif a["start"]:
@@ -62,7 +66,6 @@ import urllib.request
 import requests
 import sys
 import re
-import os
 from multiprocessing import Pool
 from collections import defaultdict
 from pprint import pprint

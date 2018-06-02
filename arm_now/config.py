@@ -3,6 +3,7 @@ class Config:
     KERNEL = DIR + "kernel"
     DTB = DIR + "dtb"
     ROOTFS = DIR + "rootfs.ext2"
+    ARCH = DIR + "arch"
     DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
 
 qemu_options = {
