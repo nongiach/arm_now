@@ -223,6 +223,7 @@ rm /root/install_pkg_manager.sh
         fs.create("/etc/profile.d/opkg_path.sh", """
 export PATH=$PATH:/opt/bin:/opt/sbin
                 """, right=555)
+    fs.sed('s/init.d\/S/init.d\/K/g', '/etc/init.d/rcK', right=755)
 
 @exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
 def get_local_files(rootfs, src, dest):

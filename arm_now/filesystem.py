@@ -1,5 +1,6 @@
 import subprocess
 import tempfile
+import os
 
 import magic
 from exall import exall, ignore, print_warning, print_traceback, print_error
@@ -46,6 +47,20 @@ class Ext2:
             subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') +
                     [str(right), temp.name, self.rootfs + ":" + dest])
 
+    def sed(self, regex, path, right=444):
+        """ Replace with sed in the roofs
+        Example: fs.sed('s/init.d\/S/init.d\/K/g', '/etc/init.d/rcK', right=755)
+        Insecure !! command injection here but regex is not exposed to user input
+        """
+        with tempfile.TemporaryDirectory() as tempdir:
+            print("Tempdir {}".format(tempdir))
+            new = tempdir + "/new"
+            old = tempdir + "/old"
+            self.get(path, old)
+            subprocess.check_call("sed '{regex}' {old} > {new}".format(
+                regex=regex, new=new, old=old), shell=True)
+            self.put(new, path, right=right)
+
 class UnknownFileSystem:
     def __init__(self, path, filemagic):
         self.rootfs = path
@@ -58,13 +73,16 @@ class UnknownFileSystem:
         pred("__CALL__ {}".format(t))
 
     def put(self, src, dest, right=444):
-        print("put is not implented for {}".format(self.rootfs))
+        porange("put is not implented for {}".format(self.rootfs))
 
     def get(self, src, dest):
-        print("get is not implented for {}".format(self.rootfs))
+        porange("get is not implented for {}".format(self.rootfs))
 
     def rm(self, filename, on_error=print_error):
-        print("rm is not implented for {}".format(self.rootfs))
+        porange("rm is not implented for {}".format(self.rootfs))
 
     def create(self, dest, content, right=444):
-        print("create is not implented for {}".format(self.rootfs))
+        porange("create is not implented for {}".format(self.rootfs))
+
+    def sed(self, regex, path, right=444):
+        porange("sed is not implented for {}".format(self.rootfs))
