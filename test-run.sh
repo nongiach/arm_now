@@ -5,4 +5,4 @@ sudo pip uninstall arm_now
 sudo pip uninstall arm_now
 sudo python3 setup.py install
 # to delete untracked files populated by setup install
-sudo git clean -fdx
+# sudo git clean -fdx

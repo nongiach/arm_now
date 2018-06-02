@@ -76,58 +76,8 @@ import re
 
 from .utils import *
 from .filesystem import *
+from .config import *
 from exall import exall, ignore, print_warning, print_traceback, print_error
-
-DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
-
-qemu_options = {
-	"aarch64": ["aarch64", "-M virt -cpu cortex-a57 -smp 1 -kernel {kernel} -append 'root=/dev/vda console=ttyAMA0' -netdev user,id=eth0 -device virtio-net-device,netdev=eth0 -drive file={rootfs},if=none,format=raw,id=hd0 -device virtio-blk-device,drive=hd0"],
-        "armv5-eabi": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"], # check log
-        "armv6-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"], # check log
-        "armv7-eabihf": ["arm", "-M vexpress-a9 -kernel {kernel} -sd {rootfs} -append 'root=/dev/mmcblk0 console=ttyAMA0 rw physmap.enabled=0 noapic'"], # check log
-        # "bfin":, TODO
-        # "m68k-68xxx":, TODO 
-        "m68k-coldfire": ["m68k", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "microblazebe": ["microblaze", "-M petalogix-s3adsp1800 -kernel {kernel} -nographic"], # rootfs is inside the kernel file, but we also have a separated rootfs if needed
-        "microblazeel": ["microblazeel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=tty0 rw physmap.enabled=0 noapic'"], # check log
-        "mips32": ["mips", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "mips32el": ["mipsel", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-	"mips32r5el": ["mipsel", "-machine malta -cpu P5600 -kernel {kernel} -drive file={rootfs},format=raw -append 'root=/dev/hda rw'"],
-        "mips32r6el": ["mipsel", "-M malta -cpu mips32r6-generic -kernel {kernel} -drive file={rootfs},format=raw -append root=/dev/hda -net nic,model=pcnet -net user"],
-        "mips64-n32": ["mips64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "mips64el-n32": ["mips64el", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/hda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        # "mips64r6el-n32":, TODO check log
-        # "mips64r6el-n32": ["mips64el", "-machine malta -kernel {kernel} -drive file={rootfs},format=raw -append 'root=/dev/hda rw console=ttyS0,'"], # check log
-        "nios2": ["nios2", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "powerpc64-e5500": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "powerpc64-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "powerpc64le-power8": ["ppc64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        "sh-sh4": ["sh4", "-M r2d -serial vc -kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # check log
-        # "sparc64":, TODO check log
-        # "sparc64": ["sparc64", "-M sun4u -kernel {kernel} -append 'root=/dev/sda console=ttyS0,115200' -drive file={rootfs},format=raw -net nic,model=e1000 -net user"], # this causes kernel crash
-        # ":sparcv8":, TODO, check log, 
-        # "sparcv8": ["sparc", "-machine SS-10 -kernel {kernel} -drive file={rootfs},format=raw -append 'root=/dev/sda console=ttyS0,115200' -net nic,model=lance -net user"], # error
-        # "x86-64-core-i7":["x86_64", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic'"], # old
-        "x86-64-core-i7" : ["x86_64", "-M pc -kernel {kernel} -drive file={rootfs},if=virtio,format=raw -append 'root=/dev/vda rw console=ttyS0' -net nic,model=virtio -net user"],
-        # "x86-core2" : ["i386", "-kernel {kernel} -hda {rootfs} -append 'root=/dev/sda console=ttyS0 rw physmap.enabled=0 noapic -net nic,model=virtio -net user'"],
-	"x86-core2": ["i386", "-M pc -kernel {kernel} -drive file={rootfs},if=virtio,format=raw -append 'root=/dev/vda rw console=ttyS0' -net nic,model=virtio -net user"], # fix opkg
-        "x86-i686":["i386", "-M pc -kernel {kernel} -drive file={rootfs},if=virtio,format=raw -append 'root=/dev/vda rw console=ttyS0' -net nic,model=virtio -net user"],
-        "xtensa-lx60": ["xtensa", "-M lx60 -cpu dc233c -monitor null -nographic -kernel {kernel} -monitor null"]
-        }
-
-install_opkg = {
-        "armv5-eabi":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
-        "armv7-eabihf":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
-        "mips32el":"""wget -O - http://pkg.entware.net/binaries/mipsel/installer/installer.sh | /bin/sh""",
-        "x86-64-core-i7":"""wget -O - http://pkg.entware.net/binaries/x86-64/installer/entware_install.sh | /bin/sh""",
-        "x86-core2":"""wget -O - http://pkg.entware.net/binaries/x86-32/installer/entware_install.sh | /bin/sh""",
-        "x86-i686":"""wget -O - http://pkg.entware.net/binaries/x86-32/installer/entware_install.sh | /bin/sh""",
-}
-
-DIR = "arm_now/"
-KERNEL = DIR + "kernel"
-DTB = DIR + "dtb"
-ROOTFS = DIR + "rootfs.ext2"
 
 def indexof_parse(url):
     re_href = re.compile('\[DIR\].*href="?([^ <>"]*)"?')
@@ -207,9 +157,9 @@ def run(arch, kernel, dtb, rootfs, add_qemu_options):
 
 def is_already_created(arch):
     """ if the current kernel and rootfs is not the same arch then delete them """
-    if not os.path.exists(DIR + "/arch"):
+    if not os.path.exists(Config.DIR + "/arch"):
         return False
-    with open(DIR + "/arch", "r") as F:
+    with open(Config.DIR + "/arch", "r") as F:
         old_arch = F.read()
     if old_arch == arch:
         return True
@@ -234,53 +184,52 @@ def do_install(arch, clean=False):
         pred("ERROR: couldn't download files for this arch", file=sys.stderr)
         sys.exit(1)
     if is_already_created(arch):
-        porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(DIR))
+        porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
         return
     with contextlib.suppress(FileExistsError):
-        os.mkdir(DIR)
-    download(kernel, KERNEL, DOWNLOAD_CACHE_DIR)
+        os.mkdir(Config.DIR)
+    download(kernel, Config.KERNEL, DOWNLOAD_CACHE_DIR)
     if dtb:
-        download(dtb, DTB, DOWNLOAD_CACHE_DIR)
-    download(rootfs, ROOTFS, DOWNLOAD_CACHE_DIR)
-    with open(DIR + "/arch", "w") as F:
+        download(dtb, Config.DTB, DOWNLOAD_CACHE_DIR)
+    download(rootfs, Config.ROOTFS, DOWNLOAD_CACHE_DIR)
+    with open(Config.DIR + "/arch", "w") as F:
         F.write(arch)
     print("[+] Installed")
 
+
 def config_filesystem(rootfs, arch):
-    if not is_ext2(rootfs):
-        return
-    try:
-        ext2_rm(rootfs, '/etc/init.d/S40network')
-        ext2_rm(rootfs, '/etc/init.d/S90tests')
-        ext2_rm(rootfs, '/etc/issue')
-    except subprocess.CalledProcessError as e:
-        print("WARNING: e2rm failed !!!")
-    ext2_write_to_file(rootfs, "/etc/issue", 
+    fs = Filesystem(rootfs)
+    fs.rm('/etc/init.d/S40network')
+    fs.rm('/etc/init.d/S90tests')
+    fs.rm('/etc/issue')
+    fs.create("/etc/issue", 
             'Welcome to arm_now\n')
-    ext2_write_to_file(rootfs, "/etc/init.d/S95_how_to_kill_qemu", 
-            'echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"\n')
-    ext2_write_to_file(rootfs, "/etc/init.d/S40_network","""
+    fs.create("/etc/init.d/S95_how_to_kill_qemu",
+            'echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"\n',
+            right=555)
+    fs.create("/etc/init.d/S40_network","""
 IFACE=$(ip a | grep -o ':.*: ' | grep -v ': lo: ' | grep -o '[^ :@]*' | head -n 1)
 ifconfig "$IFACE" 10.0.2.15
 route add default gw 10.0.2.2
 echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
-""")
+""", right=555)
     if arch in install_opkg:
-        ext2_write_to_file(rootfs, "/root/install_pkg_manager.sh", """
+        fs.create("/root/install_pkg_manager.sh", """
 {install_opkg}
 opkg update
 echo -e '\n\n now you can $ opkg install gdb'
 rm /root/install_pkg_manager.sh
-""".format(install_opkg=install_opkg[arch]))
-        ext2_write_to_file(rootfs, "/etc/profile.d/opkg_path.sh", """
+""".format(install_opkg=install_opkg[arch]), right=555)
+        fs.create("/etc/profile.d/opkg_path.sh", """
 export PATH=$PATH:/opt/bin:/opt/sbin
-                """)
+                """, right=555)
 
 @exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
 def get_local_files(rootfs, src, dest):
-    if not is_ext2(rootfs):
+    fs = Filesystem(rootfs)
+    if not fs.implemented():
         return
-    subprocess.check_call(["e2cp", rootfs + ":" + src, dest])
+    fs.get(src, dest)
     if os.path.exists("root.tar"):
         subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
@@ -330,50 +279,35 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
         pred("ERROR: no arch specified")
         sys.exit(1)
     check_dependencies()
-    if clean:
-        do_clean()
+    if clean: option.clean()
     if not offline:
         do_install(arch)
-        config_filesystem(ROOTFS, arch)
-    if sync:
-        add_local_files(ROOTFS, "/root")
-    if autostart:
-        print("AUTOSTART: {autostart}".format(autostart=autostart))
-        subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') +
-                [autostart, ROOTFS + ":/etc/init.d/S90_user_autostart"])
-    else:
-        ext2_rm(ROOTFS, "/etc/init.d/S90_user_autostart", force=True)
-    run(arch, KERNEL, DTB, ROOTFS, add_qemu_options)
+        config_filesystem(Config.ROOTFS, arch)
+    if sync: options.sync(Config.ROOTFS, src=".", dest="/root")
+    options.autostart(autostart)
+
+    run(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
     try:
         print(" Checking the filesystem ".center(80, "+"))
-        subprocess.check_call(["e2fsck", "-vfy", ROOTFS])
+        subprocess.check_call(["e2fsck", "-vfy", Config.ROOTFS])
     except subprocess.CalledProcessError as e:
         print(e)
         if str(e).find("returned non-zero exit status 1."):
             porange("It's ok but next time poweroff")
     if sync:
-        get_local_files(ROOTFS, "/root.tar", ".")
-
-@exall(os.unlink, FileNotFoundError, ignore)
-def do_clean():
-    """ Clean the filesystem.
-    """
-    os.unlink(KERNEL)
-    os.unlink(DTB)
-    os.unlink(ROOTFS)
-    shutil.rmtree(DIR, ignore_errors=True)
+        get_local_files(Config.ROOTFS, "/root.tar", ".")
 
 def do_resize(size, correct):
     """ Resize filesystem.
     """
-    subprocess.check_call(["qemu-img", "resize", ROOTFS, size])
-    subprocess.check_call(["e2fsck", "-fy", ROOTFS])
-    subprocess.check_call(["resize2fs", ROOTFS])
-    subprocess.check_call(["ls", "-lh", ROOTFS])
+    subprocess.check_call(["qemu-img", "resize", Config.ROOTFS, size])
+    subprocess.check_call(["e2fsck", "-fy", Config.ROOTFS])
+    subprocess.check_call(["resize2fs", Config.ROOTFS])
+    subprocess.check_call(["ls", "-lh", Config.ROOTFS])
     pgreen("[+] Resized to {size}".format(size=size))
     if correct:
         porange("[+] Correcting ... (be patient)".format(size=size))
-        subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [ROOTFS])
+        subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS])
 
 def test_arch(arch):
     arch = arch[:-1]
