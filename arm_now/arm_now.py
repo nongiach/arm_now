@@ -75,6 +75,7 @@ import tempfile
 import re
 
 from .utils import *
+from .filesystem import *
 from exall import exall, ignore, print_warning, print_traceback, print_error
 
 DOWNLOAD_CACHE_DIR = "/tmp/arm_now"
@@ -341,7 +342,7 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
         subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') +
                 [autostart, ROOTFS + ":/etc/init.d/S90_user_autostart"])
     else:
-        ext2_rm(ROOTFS, "/etc/init.d/S90_user_autostart")
+        ext2_rm(ROOTFS, "/etc/init.d/S90_user_autostart", force=True)
     run(arch, KERNEL, DTB, ROOTFS, add_qemu_options)
     try:
         print(" Checking the filesystem ".center(80, "+"))
