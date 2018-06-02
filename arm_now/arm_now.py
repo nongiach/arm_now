@@ -50,7 +50,7 @@ def main():
                 ' '.join(a["--add-qemu-options"]),
                 a["--autostart"])
     elif a["clean"]:
-        do_clean()
+        options.clean(Config)
     elif a["resize"]:
         do_resize(a["<new_size>"], a["--correct"])
     elif a["install"]:
@@ -168,14 +168,13 @@ def is_already_created(arch):
     response = input("(use --clean next time) An {} image exists, delete ? (y/n) ".format(old_arch))
     if not response.startswith("y"):
         sys.exit(1)
-    do_clean()
+    options.clean(Config)
     return False
 
 def do_install(arch, clean=False):
     """ download and setup filesystem and kernel
     """
-    if clean:
-        do_clean()
+    if clean: options.clean(Config)
     if arch not in qemu_options:
         pred("ERROR: I don't know this arch yet", file=sys.stderr)
         porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
@@ -189,10 +188,10 @@ def do_install(arch, clean=False):
         return
     with contextlib.suppress(FileExistsError):
         os.mkdir(Config.DIR)
-    download(kernel, Config.KERNEL, DOWNLOAD_CACHE_DIR)
+    download(kernel, Config.KERNEL, Config.DOWNLOAD_CACHE_DIR)
     if dtb:
-        download(dtb, Config.DTB, DOWNLOAD_CACHE_DIR)
-    download(rootfs, Config.ROOTFS, DOWNLOAD_CACHE_DIR)
+        download(dtb, Config.DTB, Config.DOWNLOAD_CACHE_DIR)
+    download(rootfs, Config.ROOTFS, Config.DOWNLOAD_CACHE_DIR)
     with open(Config.DIR + "/arch", "w") as F:
         F.write(arch)
     print("[+] Installed")
@@ -280,7 +279,7 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
         pred("ERROR: no arch specified")
         sys.exit(1)
     check_dependencies()
-    if clean: option.clean()
+    if clean: option.clean(Config)
     if not offline:
         do_install(arch)
         config_filesystem(Config.ROOTFS, arch)

@@ -5,7 +5,7 @@ from exall import exall, ignore, print_warning, print_traceback, print_error
 from .filesystem import *
 
 @exall(os.unlink, FileNotFoundError, ignore)
-def do_clean(config):
+def clean(config):
     """ Clean the filesystem.
     """
     os.unlink(config.KERNEL)
