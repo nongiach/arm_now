@@ -1,18 +1,21 @@
 import os
 import shutil
 
+from exall import exall, ignore, print_warning, print_traceback, print_error
+from .filesystem import *
+
 @exall(os.unlink, FileNotFoundError, ignore)
-def do_clean():
+def do_clean(config):
     """ Clean the filesystem.
     """
-    os.unlink(KERNEL)
-    os.unlink(DTB)
-    os.unlink(ROOTFS)
-    shutil.rmtree(DIR, ignore_errors=True)
+    os.unlink(config.KERNEL)
+    os.unlink(config.DTB)
+    os.unlink(config.ROOTFS)
+    shutil.rmtree(config.DIR, ignore_errors=True)
 
-def autostart(script):
-    if autostart:
-        print("AUTOSTART: {autostart}".format(autostart=autostart))
-        fs.put(autostart, "/etc/init.d/S90_user_autostart", right=555)
+def autostart(rootfs, script):
+    fs = Filesystem(rootfs)
+    if script:
+        fs.put(script, "/etc/init.d/S90_user_autostart", right=555)
     else:
-        ext2_rm(ROOTFS, "/etc/init.d/S90_user_autostart")
+        fs.rm("/etc/init.d/S90_user_autostart")

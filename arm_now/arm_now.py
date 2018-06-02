@@ -77,6 +77,7 @@ import re
 from .utils import *
 from .filesystem import *
 from .config import *
+from . import options
 from exall import exall, ignore, print_warning, print_traceback, print_error
 
 def indexof_parse(url):
@@ -284,7 +285,7 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
         do_install(arch)
         config_filesystem(Config.ROOTFS, arch)
     if sync: options.sync(Config.ROOTFS, src=".", dest="/root")
-    options.autostart(autostart)
+    options.autostart(Config.ROOTFS, autostart)
 
     run(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
     try:
