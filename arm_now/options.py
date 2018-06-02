@@ -35,6 +35,7 @@ def sync(rootfs, src, dest):
                         cd {dest}
                         tar xf /current_directory.tar
                         rm /current_directory.tar
+                        rm /etc/init.d/S95_sync_current_diretory
                         """.format(dest=dest), right=555)
 
     # TODO: check rootfs fs against parameter injection
