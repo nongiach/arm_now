@@ -18,6 +18,7 @@ Commands:
   resize        Resize the current rootfs. (example: resize 1G)
   clean         Delete the current rootfs.
   install       Install and config a rootfs for the given <arch>. (default: armv5-eabi)
+  show          Show informations about the rootfs.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Options:
   --sync                        Synchronize the current directory with the vm home.
@@ -38,8 +39,29 @@ Defaults:
   arch          Defaults to armv5-eabi.
 """
 
-from docopt import docopt
 import os
+import urllib.request
+import requests
+import sys
+import re
+from multiprocessing import Pool
+from collections import defaultdict
+from pprint import pprint
+import shutil
+import contextlib
+import operator
+import subprocess
+import platform
+import tempfile
+import re
+
+from docopt import docopt
+from exall import exall, ignore, print_warning, print_traceback, print_error
+
+from .utils import *
+from .filesystem import *
+from .config import *
+from . import options
 
 def main():
     a = docopt(__doc__, version='arm_now 1.2')
@@ -59,29 +81,10 @@ def main():
         do_resize(a["<new_size>"], a["--correct"])
     elif a["install"]:
         do_install(a["<arch>"] or "armv5-eabi", a["--clean"])
+    elif a["show"]:
+        do_show()
 
 #  ================ End Argument Parsing ==============================
-
-import urllib.request
-import requests
-import sys
-import re
-from multiprocessing import Pool
-from collections import defaultdict
-from pprint import pprint
-import shutil
-import contextlib
-import operator
-import subprocess
-import platform
-import tempfile
-import re
-
-from .utils import *
-from .filesystem import *
-from .config import *
-from . import options
-from exall import exall, ignore, print_warning, print_traceback, print_error
 
 def indexof_parse(url):
     re_href = re.compile('\[DIR\].*href="?([^ <>"]*)"?')
@@ -329,6 +332,16 @@ def do_list(all=False):
         all_arch = indexof_parse(url)
         p = Pool(10)
         ret = p.map(test_arch, all_arch)
+
+def do_show():
+    if not os.path.isfile(Config.ARCH) or not os.path.isfile(Config.ROOTFS):
+        pred("File missing")
+        return
+    with open(Config.ARCH) as F:
+        arch = F.read()
+    size = os.path.getsize(Config.ROOTFS)
+    pgreen("arch         = {}".format(arch))
+    pgreen("rootfs size  = {}M".format(size // 1024))
 
 if __name__ == "__main__":
     main()

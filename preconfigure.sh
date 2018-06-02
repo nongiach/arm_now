@@ -2,7 +2,7 @@ cd ../
 rm -rf preconfig
 mkdir preconfig
 cd preconfig
-arm_now install --clean
+arm_now install x86-i686 --clean
 arm_now resize 200M
 mkdir cacert
 cd cacert
