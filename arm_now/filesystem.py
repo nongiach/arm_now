@@ -6,21 +6,16 @@ import magic
 from exall import exall, ignore, print_warning, print_traceback, print_error
 from .utils import *
 
-# def ext2_write_to_file(rootfs, dest, script):
-#     with tempfile.TemporaryDirectory() as tmpdirname:
-#         filename = tmpdirname + "/script"
-#         with open(filename, "w") as F:
-#             F.write(script)
-#         subprocess.check_call("e2cp -G 0 -O 0 -P 555".split(' ') + [filename, rootfs + ":" + dest])
-
-
 def Filesystem(path):
     filemagic = magic.from_file(path)
-    if "ext2" in filemagic:
-        return Ext2(path)
-    return UnknownFileSystem(path, filemagic)
+    if "ext2" in filemagic or "ext4" in filemagic:
+        return Ext2_Ext4(path)
+    if "cpio" in filemagic:
+        return Cpio(path)
+    pred("UnknownFileSystem {}".format(filemagic))
+    sys.exit(1)
 
-class Ext2:
+class Ext2_Ext4:
     def __init__(self, path):
         self.rootfs = path
 
@@ -61,10 +56,30 @@ class Ext2:
                 regex=regex, new=new, old=old), shell=True)
             self.put(new, path, right=right)
 
-class UnknownFileSystem:
+    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    def resize(self, size):
+        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
+        subprocess.check_call(["e2fsck", "-fy", self.rootfs])
+        subprocess.check_call(["resize2fs", self.rootfs])
+        subprocess.check_call(["ls", "-lh", self.rootfs])
+        pgreen("[+] Resized to {size}".format(size=size))
+
+    def correct(self):
+        porange("[+] Correcting ... (be patient)".format(size=size))
+        subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS])
+
+    def check(self):
+        try:
+            print(" Checking the filesystem ".center(80, "+"))
+            subprocess.check_call(["e2fsck", "-vfy", self.rootfs])
+        except subprocess.CalledProcessError as e:
+            print(e)
+            if str(e).find("returned non-zero exit status 1."):
+                porange("It's ok but next time poweroff")
+
+class Cpio:
     def __init__(self, path, filemagic):
         self.rootfs = path
-        porange("UnknownFileSystem({}, {})".format(path, filemagic))
 
     def implemented(self):
         return False
@@ -86,3 +101,15 @@ class UnknownFileSystem:
 
     def sed(self, regex, path, right=444):
         porange("sed is not implented for {}".format(self.rootfs))
+
+    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    def resize(self, size):
+        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
+        subprocess.check_call(["ls", "-lh", self.rootfs])
+        pgreen("[+] Resized to {size}".format(size=size))
+
+    def correct(self, regex, path, right=444):
+        porange("correct is not implented for {}".format(self.rootfs))
+
+    def check(self):
+        porange("check is not implented for {}".format(self.rootfs))

@@ -60,11 +60,16 @@ from docopt import docopt
 from exall import exall, ignore, print_warning, print_traceback, print_error
 
 from .utils import *
-from .filesystem import *
-from .config import *
+from filesystem import Filesystem
+from .config import Config, qemu_options, install_opkg
 from . import options
+from .download import download, scrawl_kernel
 
 def main():
+    """ Call the function according to the asked command
+        Read above to acknowledge supported commands
+    """
+    check_dependencies_or_exit()
     a = docopt(__doc__, version='arm_now 1.2')
     if not a["<arch>"] and os.path.isfile(Config.ARCH):
         with open(Config.ARCH) as F:
@@ -87,64 +92,27 @@ def main():
 
 #  ================ End Argument Parsing ==============================
 
-def indexof_parse(url):
-    re_href = re.compile('\[DIR\].*href="?([^ <>"]*)"?')
-    response = requests.get(url)
-    text = response.text
-    links = re_href.findall(text)
-    return links
+def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
+    """Setup and start a virtualmachine using qemu.
 
-libc = ["uclibc", "glibc", "musl"]
-def get_link_libc(link):
-    for i_libc in libc:
-        if i_libc in link:
-            return i_libc
-    return None
+    :param arch: The cpu architecture that will be started.
+    :param redir: Redirect a host port to the guest.
+    :param offline: skip the checks for new images.
+    :param clean: Clean filesystem before starting.
+    :param sync: Sync le current directory with the guest.
+    """
+    add_qemu_options += " " + convert_redir_to_qemu_args(redir)
+    fs = Filesystem(Config.ROOTFS)
+    if clean: option.clean(Config)
+    if not offline: do_install(arch)
+    config_filesystem(Config.ROOTFS, arch)
+    if sync: options.sync_upload(Config.ROOTFS, src=".", dest="/root")
+    options.autostart(Config.ROOTFS, autostart)
+    run_qemu(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
+    fs.check()
+    if sync: options.sync_download(Config.ROOTFS, "/root.tar", ".")
 
-def get_link_version(link):
-    if "bleeding-edge" in link:
-        return "bleeding-edge"
-    else:
-        return "stable"
-
-def get_link_filetype(link):
-    if ".cpio" in link or ".ext2" in link or "rootfs" in link:
-        return "rootfs"
-    elif "dtb" in link:
-        return "dtb"
-    elif "Image" in link or "vmlinux" in link or "linux.bin" in link:
-        return "kernel"
-    print("ERROR: I don't know this kind of file {}".format(link), file=sys.stderr)
-    # os.kill(0, 9)
-    return None
-
-def scrawl_kernel(arch):
-    re_href = re.compile('href="?({arch}[^ <>"]*)"?'.format(arch=arch))
-    url = "https://toolchains.bootlin.com/downloads/releases/toolchains/{arch}/test-system/".format(arch=arch)
-    response = requests.get(url + "?C=M;O=D")
-    text = response.text
-    links = re_href.findall(text)
-    links_dict = defaultdict(lambda : defaultdict(dict))
-    for link in links:
-        version = get_link_version(link)
-        libc = get_link_libc(link)
-        filetype = get_link_filetype(link)
-
-        # TODO: make sure they have been compiled at the same time
-        if filetype not in links_dict[version][libc]:
-            if filetype is None:
-                return None, None, None
-            links_dict[version][libc][filetype] = url + link
-    state = "stable" if "stable" in links_dict else "bleeding-edge"
-    libc = "uclibc" if "uclibc" in links_dict[state] else None
-    libc = "musl" if "musl" in links_dict[state] else libc
-    libc = "glibc" if "glibc" in links_dict[state] else libc
-    dtb = None if "dtb" not in links_dict[state][libc] else links_dict[state][libc]["dtb"]
-    rootfs = None if "rootfs" not in links_dict[state][libc] else links_dict[state][libc]["rootfs"]
-    kernel = None if "kernel" not in links_dict[state][libc] else links_dict[state][libc]["kernel"]
-    return kernel, dtb, rootfs
-
-def run(arch, kernel, dtb, rootfs, add_qemu_options):
+def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
     dtb = "" if not os.path.exists(dtb) else "-dtb {}".format(dtb)
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
@@ -171,7 +139,6 @@ def is_already_created(arch):
         old_arch = F.read()
     if old_arch == arch:
         return True
-    # response = input("(use --clean next time) Current directory contains a different arch ({}), delete ? (y/n) ".format(old_arch))
     response = input("(use --clean next time) An {} image exists, delete ? (y/n) ".format(old_arch))
     if not response.startswith("y"):
         sys.exit(1)
@@ -183,7 +150,7 @@ def do_install(arch, clean=False):
     """
     if clean: options.clean(Config)
     if arch not in qemu_options:
-        pred("ERROR: I don't know this arch yet", file=sys.stderr)
+        pred("ERROR: I don't know this arch='{}' yet".format(arch), file=sys.stderr)
         porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
         sys.exit(1)
     kernel, dtb, rootfs = scrawl_kernel(arch)
@@ -196,12 +163,11 @@ def do_install(arch, clean=False):
     with contextlib.suppress(FileExistsError):
         os.mkdir(Config.DIR)
     download(kernel, Config.KERNEL, Config.DOWNLOAD_CACHE_DIR)
-    if dtb:
-        download(dtb, Config.DTB, Config.DOWNLOAD_CACHE_DIR)
+    if dtb: download(dtb, Config.DTB, Config.DOWNLOAD_CACHE_DIR)
     download(rootfs, Config.ROOTFS, Config.DOWNLOAD_CACHE_DIR)
     with open(Config.DIR + "/arch", "w") as F:
         F.write(arch)
-    print("[+] Installed")
+    pgreen("[+] Installed")
 
 
 def config_filesystem(rootfs, arch):
@@ -232,19 +198,7 @@ export PATH=$PATH:/opt/bin:/opt/sbin
                 """, right=555)
     fs.sed('s/init.d\/S/init.d\/K/g', '/etc/init.d/rcK', right=755)
 
-@exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
-def get_local_files(rootfs, src, dest):
-    fs = Filesystem(rootfs)
-    if not fs.implemented():
-        return
-    fs.get(src, dest)
-    if os.path.exists("root.tar"):
-        subprocess.check_call("tar xf root.tar".split(' '))
-        os.unlink("root.tar")
-    else:
-        pgreen("Use the 'save' command before exiting the vm to retrieve all files on the host")
-
-def check_dependencies():
+def check_dependencies_or_exit():
     dependencies = [
             which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
             which("qemu-system-arm", ubuntu="apt-get install qemu", arch="yaourt -S qemu-arch-extra")
@@ -253,11 +207,8 @@ def check_dependencies():
         print("requirements missing, plz install them", file=sys.stderr)
         sys.exit(1)
 
-def test():
-    get_local_files("./arm_now/rootfs.ext2", "/root.tar", ".")
-
 re_redir = re.compile(r"(tcp|udp):\d+::\d+")
-def parse_redir(redir):
+def convert_redir_to_qemu_args(redir):
     qemu_redir = []
     for r in redir:
         if not re_redir.match(r):
@@ -268,54 +219,15 @@ def parse_redir(redir):
             sys.exit(1)
     return ''.join(map("-redir {} ".format, redir))
 
-def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
-    """Setup and start a virtualmachine using qemu.
 
-    :param arch: The cpu architecture that will be started.
-    :param redir: Redirect a host port to the guest.
-    :param offline: skip the checks for new images.
-    :param clean: Clean filesystem before starting.
-    :param sync: Sync le current directory with the guest.
-    """
-    redir = parse_redir(redir)
-    add_qemu_options += " " + redir
-    print("o" * 40)
-    print(add_qemu_options)
-    if not arch:
-        print("Supported architectures:")
-        print(list_arch())
-        pred("ERROR: no arch specified")
-        sys.exit(1)
-    check_dependencies()
-    if clean: option.clean(Config)
-    if not offline:
-        do_install(arch)
-        config_filesystem(Config.ROOTFS, arch)
-    if sync: options.sync(Config.ROOTFS, src=".", dest="/root")
-    options.autostart(Config.ROOTFS, autostart)
-
-    run(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
-    try:
-        print(" Checking the filesystem ".center(80, "+"))
-        subprocess.check_call(["e2fsck", "-vfy", Config.ROOTFS])
-    except subprocess.CalledProcessError as e:
-        print(e)
-        if str(e).find("returned non-zero exit status 1."):
-            porange("It's ok but next time poweroff")
-    if sync:
-        get_local_files(Config.ROOTFS, "/root.tar", ".")
-
+@exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
 def do_resize(size, correct):
     """ Resize filesystem.
     """
-    subprocess.check_call(["qemu-img", "resize", Config.ROOTFS, size])
-    subprocess.check_call(["e2fsck", "-fy", Config.ROOTFS])
-    subprocess.check_call(["resize2fs", Config.ROOTFS])
-    subprocess.check_call(["ls", "-lh", Config.ROOTFS])
-    pgreen("[+] Resized to {size}".format(size=size))
+    fs = Filesystem(Config.ROOTFS)
+    fs.resize(size)
     if correct:
-        porange("[+] Correcting ... (be patient)".format(size=size))
-        subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS])
+        fs.correct()
 
 def test_arch(arch):
     arch = arch[:-1]

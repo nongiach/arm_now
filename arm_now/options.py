@@ -20,7 +20,7 @@ def autostart(rootfs, script):
     else:
         fs.rm("/etc/init.d/S90_user_autostart")
 
-def sync(rootfs, src, dest):
+def sync_upload(rootfs, src, dest):
     fs = Filesystem(rootfs)
     if not fs.implemented():
         return
@@ -44,3 +44,15 @@ def sync(rootfs, src, dest):
                 tar cf /root.tar *
                 sync
                 """.format(dest=dest), right=555)
+
+@exall(subprocess.check_call, subprocess.CalledProcessError, print_warning)
+def sync_download(rootfs, src, dest):
+    fs = Filesystem(rootfs)
+    if not fs.implemented():
+        return
+    fs.get(src, dest)
+    if os.path.exists("root.tar"):
+        subprocess.check_call("tar xf root.tar".split(' '))
+        os.unlink("root.tar")
+    else:
+        pgreen("Use the 'save' command before exiting the vm to retrieve all files on the host")

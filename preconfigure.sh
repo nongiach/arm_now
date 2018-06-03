@@ -2,13 +2,18 @@ cd ../
 rm -rf preconfig
 mkdir preconfig
 cd preconfig
-arm_now install x86-core2 --clean
-arm_now resize 200M
-# mkdir cacert
-# cd cacert
-# curl https://curl.haxx.se/ca/cacert.pem | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "cert" n ".pem"}'
-# cd -
-cat <<EOF>>config_ssl.sh
+for arch in $(arm_now list)
+do
+  echo arch ARCH="$arch"
+  arm_now install "$arch" --clean
+  arm_now resize 100M
+  echo "Resize ok ?"
+  # read
+  # mkdir cacert
+  # cd cacert
+  # curl https://curl.haxx.se/ca/cacert.pem | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "cert" n ".pem"}'
+  # cd -
+  cat <<EOF>>config_ssl.sh
 cd /root
 if [[ -e ./install_pkg_manager.sh ]]
 then
@@ -41,5 +46,10 @@ fi
 
 poweroff
 EOF
-
-arm_now start --autostart config_ssl.sh --sync
+  e2ls arm_now/rootfs.ext2:/root | grep install
+  RET="$?"
+  if [[ "$RET" == "0" ]]; then
+    arm_now start --autostart config_ssl.sh
+  fi
+  tar -Jcf "$(cat arm_now/arch).tar.xz" arm_now/
+done
