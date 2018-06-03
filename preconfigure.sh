@@ -7,7 +7,6 @@ do
   echo arch ARCH="$arch"
   arm_now install "$arch" --clean
   arm_now resize 100M
-  echo "Resize ok ?"
   # read
   # mkdir cacert
   # cd cacert
@@ -48,8 +47,10 @@ poweroff
 EOF
   echo armv5-eabi armv7-eabihf mips32el x86-64-core-i7 x86-core2 x86-i686 | grep -- "$arch"
   RET="$?"
+  echo "Preconfig.."
   if [[ "$RET" == "0" ]]; then
     arm_now start --autostart config_ssl_and_pkg_manager.sh
   fi
+  echo "Compress.."
   tar -Jcf "$(cat arm_now/arch).tar.xz" arm_now/
 done

@@ -5,11 +5,12 @@
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [<arch>] [--clean] [--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--redir=<port>]... 
+  arm_now start [<arch>] [--clean] [-s|--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--redir=<port>]... 
   arm_now clean
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean]
   arm_now show
+  arm_now download [<arch>] [--real-source]
   arm_now -h | --help
   arm_now --version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -18,8 +19,9 @@ Commands:
   start         Start a vm with a <arch> cpu. (default: armv5-eabi)
   resize        Resize the current rootfs. (example: resize 1G)
   clean         Delete the current rootfs.
-  install       Install and config a rootfs for the given <arch>. (default: armv5-eabi)
+  install       Download, install and config a rootfs for the given <arch>. (default: armv5-eabi)
   show          Show informations about the rootfs.
+  download      Download template for <arch>.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Options:
   --sync                        Synchronize the current directory with the vm home.
@@ -41,21 +43,16 @@ Defaults:
 """
 
 import os
-import urllib.request
-import requests
 import sys
 import re
 from multiprocessing import Pool
-from collections import defaultdict
-from pprint import pprint
-import shutil
 import contextlib
-import operator
-import subprocess
-import platform
-import tempfile
 import re
+from pathlib import Path
 
+# Exall is an exception manager based on decorator/context/callback
+# Check it out: https://github.com/nongiach/exall
+from exall import exall, ignore, print_warning, print_traceback, print_error
 from docopt import docopt
 
 from .utils import *
@@ -77,7 +74,8 @@ def main():
         do_list(a["--all"])
     elif a["start"]:
         do_start(a["<arch>"] or "armv5-eabi",
-                a["--clean"], a["--sync"], a["--offline"], a["--redir"],
+                a["--clean"], a["--sync"] or a["-s"],
+                a["--offline"], a["--redir"],
                 ' '.join(a["--add-qemu-options"]),
                 a["--autostart"])
     elif a["clean"]:
@@ -88,6 +86,8 @@ def main():
         do_install(a["<arch>"] or "armv5-eabi", a["--clean"])
     elif a["show"]:
         do_show()
+    elif a["download"]:
+        do_download(a["<arch>"], a["--real-source"])
 
 #  ================ End Argument Parsing ==============================
 
@@ -256,6 +256,14 @@ def do_show():
     pgreen("rootfs size  = {}M".format(size // (1024 * 1024) ))
     Filesystem(Config.ROOTFS).ls("/root")
     print("~" * 80)
+
+@exall(os.mkdir, FileExistsError, ignore)
+def do_download(arch, real_source):
+    templates = str(Path.home()) + "/config/arm_now/templates/"
+    os.makedirs(templates)
+    filename = arch + ".tar.xz"
+    URL = "https://github.com/nongiach/arm_now_templates/raw/master/"
+    download(URL + filename, templates + filename, Config.DOWNLOAD_CACHE_DIR)
 
 if __name__ == "__main__":
     main()
