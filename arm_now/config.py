@@ -1,5 +1,9 @@
 class Config:
     DIR = "arm_now/"
+    kernel = "kernel"
+    dtb = "dtb"
+    rootfs = "rootfs.ext2"
+    arch = "arch"
     KERNEL = DIR + "kernel"
     DTB = DIR + "dtb"
     ROOTFS = DIR + "rootfs.ext2"

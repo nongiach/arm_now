@@ -5,12 +5,11 @@
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [<arch>] [--clean] [-s|--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--redir=<port>]... 
+  arm_now start [<arch>] [--clean] [-s|--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--real-source] [--redir=<port>]... 
   arm_now clean
   arm_now resize <new_size> [--correct]
-  arm_now install [<arch>] [--clean]
+  arm_now install [<arch>] [--clean] [--real-source]
   arm_now show
-  arm_now download [<arch>] [--real-source]
   arm_now -h | --help
   arm_now --version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +47,6 @@ import re
 from multiprocessing import Pool
 import contextlib
 import re
-from pathlib import Path
 
 # Exall is an exception manager based on decorator/context/callback
 # Check it out: https://github.com/nongiach/exall
@@ -59,7 +57,7 @@ from .utils import *
 from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
-from .download import download, scrawl_kernel
+from .download import  download_image, scrawl_kernel
 
 def main():
     """ Call the function according to the asked command
@@ -77,21 +75,19 @@ def main():
                 a["--clean"], a["--sync"] or a["-s"],
                 a["--offline"], a["--redir"],
                 ' '.join(a["--add-qemu-options"]),
-                a["--autostart"])
+                a["--autostart"], a["--real-source"])
     elif a["clean"]:
         options.clean(Config)
     elif a["resize"]:
         do_resize(a["<new_size>"], a["--correct"])
     elif a["install"]:
-        do_install(a["<arch>"] or "armv5-eabi", a["--clean"])
+        do_install(a["<arch>"] or "armv5-eabi", a["--clean"], a["--real-source"])
     elif a["show"]:
         do_show()
-    elif a["download"]:
-        do_download(a["<arch>"], a["--real-source"])
 
 #  ================ End Argument Parsing ==============================
 
-def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
+def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart, real_source):
     """Setup and start a virtualmachine using qemu.
 
     :param arch: The cpu architecture that will be started.
@@ -101,10 +97,9 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart):
     :param sync: Sync le current directory with the guest.
     """
     add_qemu_options += " " + convert_redir_to_qemu_args(redir)
+    do_install(arch, clean, real_source)
     fs = Filesystem(Config.ROOTFS)
-    if clean: option.clean(Config)
-    if not offline: do_install(arch)
-    config_filesystem(Config.ROOTFS, arch)
+    if real_source: config_filesystem(Config.ROOTFS, arch)
     if sync: options.sync_upload(Config.ROOTFS, src=".", dest="/root")
     options.autostart(Config.ROOTFS, autostart)
     run_qemu(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
@@ -144,7 +139,7 @@ def is_already_created(arch):
     options.clean(Config)
     return False
 
-def do_install(arch, clean=False):
+def do_install(arch, clean, real_source):
     """ download and setup filesystem and kernel
     """
     if clean: options.clean(Config)
@@ -152,22 +147,36 @@ def do_install(arch, clean=False):
         pred("ERROR: I don't know this arch='{}' yet".format(arch), file=sys.stderr)
         porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
         sys.exit(1)
-    kernel, dtb, rootfs = scrawl_kernel(arch)
-    if kernel is None or rootfs is None:
-        pred("ERROR: couldn't download files for this arch", file=sys.stderr)
-        sys.exit(1)
     if is_already_created(arch):
         porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
         return
-    with contextlib.suppress(FileExistsError):
-        os.mkdir(Config.DIR)
-    download(kernel, Config.KERNEL, Config.DOWNLOAD_CACHE_DIR)
-    if dtb: download(dtb, Config.DTB, Config.DOWNLOAD_CACHE_DIR)
-    download(rootfs, Config.ROOTFS, Config.DOWNLOAD_CACHE_DIR)
-    with open(Config.DIR + "/arch", "w") as F:
-        F.write(arch)
+    with contextlib.suppress(FileExistsError): os.mkdir(Config.DIR)
+    download_image(arch, dest=Config.DIR, real_source=real_source)
     pgreen("[+] Installed")
 
+# def do_install_real_source(arch, clean=False):
+#     """ download and setup filesystem and kernel
+#     """
+#     if clean: options.clean(Config)
+#     if arch not in qemu_options:
+#         pred("ERROR: I don't know this arch='{}' yet".format(arch), file=sys.stderr)
+#         porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
+#         sys.exit(1)
+#     kernel, dtb, rootfs = scrawl_kernel(arch)
+#     if kernel is None or rootfs is None:
+#         pred("ERROR: couldn't download files for this arch", file=sys.stderr)
+#         sys.exit(1)
+#     if is_already_created(arch):
+#         porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
+#         return
+#     with contextlib.suppress(FileExistsError):
+#         os.mkdir(Config.DIR)
+#     download(kernel, Config.KERNEL, Config.DOWNLOAD_CACHE_DIR)
+#     if dtb: download(dtb, Config.DTB, Config.DOWNLOAD_CACHE_DIR)
+#     download(rootfs, Config.ROOTFS, Config.DOWNLOAD_CACHE_DIR)
+#     with open(Config.DIR + "/arch", "w") as F:
+#         F.write(arch)
+#     pgreen("[+] Installed")
 
 def config_filesystem(rootfs, arch):
     fs = Filesystem(rootfs)
@@ -256,14 +265,6 @@ def do_show():
     pgreen("rootfs size  = {}M".format(size // (1024 * 1024) ))
     Filesystem(Config.ROOTFS).ls("/root")
     print("~" * 80)
-
-@exall(os.mkdir, FileExistsError, ignore)
-def do_download(arch, real_source):
-    templates = str(Path.home()) + "/config/arm_now/templates/"
-    os.makedirs(templates)
-    filename = arch + ".tar.xz"
-    URL = "https://github.com/nongiach/arm_now_templates/raw/master/"
-    download(URL + filename, templates + filename, Config.DOWNLOAD_CACHE_DIR)
 
 if __name__ == "__main__":
     main()
