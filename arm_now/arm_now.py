@@ -57,10 +57,9 @@ import tempfile
 import re
 
 from docopt import docopt
-from exall import exall, ignore, print_warning, print_traceback, print_error
 
 from .utils import *
-from filesystem import Filesystem
+from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
 from .download import download, scrawl_kernel
@@ -220,7 +219,6 @@ def convert_redir_to_qemu_args(redir):
     return ''.join(map("-redir {} ".format, redir))
 
 
-@exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
 def do_resize(size, correct):
     """ Resize filesystem.
     """
@@ -256,11 +254,8 @@ def do_show():
     size = os.path.getsize(Config.ROOTFS)
     pgreen("arch         = {}".format(arch))
     pgreen("rootfs size  = {}M".format(size // (1024 * 1024) ))
-    ls_cmd = ["e2ls", Config.ROOTFS + ":/root"]
-    print((" " + " ".join(ls_cmd) + " ").center(80, "~"))
-    subprocess.check_call(ls_cmd)
+    Filesystem(Config.ROOTFS).ls("/root")
     print("~" * 80)
-
 
 if __name__ == "__main__":
     main()

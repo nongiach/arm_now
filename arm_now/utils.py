@@ -2,14 +2,8 @@ import functools
 import subprocess
 import os
 import sys
-import shutil
 import difflib
 import contextlib
-
-# once cpio fully supported will we still need this magic ?
-import magic
-from pySmartDL import SmartDL
-from exall import exall, ignore, print_warning, print_traceback, print_error
 
 """
 Utils functions:
@@ -52,25 +46,6 @@ def which(filename, **kwargs):
 
 def maybe_you_meant(string, strings):
     return ' or '.join(difflib.get_close_matches(string, strings, cutoff=0.3))
-
-@exall(os.mkdir, FileExistsError, ignore)
-def download(url, filename, cache_directory):
-    print("\nDownloading {} from {}".format(filename, url))
-    filename_cache = url.split('/')[-1]
-    filename_cache = ''.join([ c for c in filename_cache if c.isdigit() or c.isalpha() ])
-    filename_cache = cache_directory + "/" + filename_cache
-    print(filename_cache)
-    if os.path.exists(filename):
-        print("Filexists")
-    elif os.path.exists(filename_cache):
-        print("Already downloaded")
-        shutil.copyfile(filename_cache, filename)
-    else:
-        os.mkdir(cache_directory)
-        # wget.download(url, out=filename_cache)
-        obj = SmartDL(url, filename_cache)
-        obj.start()
-        shutil.copyfile(filename_cache, filename)
 
 def avoid_parameter_injection(params):
     new_params = []

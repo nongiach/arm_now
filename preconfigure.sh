@@ -13,7 +13,7 @@ do
   # cd cacert
   # curl https://curl.haxx.se/ca/cacert.pem | awk 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > "cert" n ".pem"}'
   # cd -
-  cat <<EOF>>config_ssl.sh
+  cat <<EOF>>config_ssl_and_pkg_manager.sh
 cd /root
 if [[ -e ./install_pkg_manager.sh ]]
 then
@@ -46,10 +46,10 @@ fi
 
 poweroff
 EOF
-  e2ls arm_now/rootfs.ext2:/root | grep install
+  echo armv5-eabi armv7-eabihf mips32el x86-64-core-i7 x86-core2 x86-i686 | grep -- "$arch"
   RET="$?"
   if [[ "$RET" == "0" ]]; then
-    arm_now start --autostart config_ssl.sh
+    arm_now start --autostart config_ssl_and_pkg_manager.sh
   fi
   tar -Jcf "$(cat arm_now/arch).tar.xz" arm_now/
 done
