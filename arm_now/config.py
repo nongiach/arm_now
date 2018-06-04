@@ -45,6 +45,12 @@ qemu_options = {
         "xtensa-lx60": ["xtensa", "-M lx60 -cpu dc233c -monitor null -nographic -kernel {kernel} -monitor null"]
         }
 
+""" The final user is not vulnerable to MITM attack, thoose http links are used to preconfigure the package manager.
+When you do a arm_now start armv5-eabi the image you are downloading already has opkg installed and
+everything is configured to use https, zero request are made over http.
+thx lucasduffey
+"""
+
 install_opkg = {
         "armv5-eabi":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",
         "armv7-eabihf":"""wget -O - http://pkg.entware.net/binaries/armv5/installer/entware_install.sh | /bin/sh""",

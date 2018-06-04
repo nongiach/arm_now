@@ -21,7 +21,7 @@ Commands:
   clean         Delete the current rootfs.
   install       Download, install and config a rootfs for the given <arch>. (default: armv5-eabi)
   show          Show informations about the rootfs.
-  download      Download template for <arch>.
+  offline       Donlowad all rootfs and kernel so arm_now can be fully runned offline.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Options:
   --sync                        Synchronize the current directory with the vm home.
