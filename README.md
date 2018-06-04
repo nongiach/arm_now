@@ -12,7 +12,7 @@ arm_now is a qemu powered tool that allows instant setup of virtual machines on 
 
 # Start an arm Virtual Machine
 ```sh
-$ arm_now start armv5-eabi --clean
+$ arm_now start armv5-eabi
 Welcome to arm_now
 buildroot login: root
 # uname -m
