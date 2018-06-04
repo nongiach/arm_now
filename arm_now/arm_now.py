@@ -10,6 +10,7 @@ Usage:
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean] [--real-source]
   arm_now show
+  arm_now offline
   arm_now -h | --help
   arm_now --version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,6 +48,7 @@ import re
 from multiprocessing import Pool
 import contextlib
 import re
+from pathlib import Path
 
 # Exall is an exception manager based on decorator/context/callback
 # Check it out: https://github.com/nongiach/exall
@@ -57,7 +59,7 @@ from .utils import *
 from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
-from .download import  download_image, scrawl_kernel
+from .download import  download_image, scrawl_kernel, download
 
 def main():
     """ Call the function according to the asked command
@@ -84,6 +86,9 @@ def main():
         do_install(a["<arch>"] or "armv5-eabi", a["--clean"], a["--real-source"])
     elif a["show"]:
         do_show()
+    elif a["offline"]:
+        do_offline()
+
 
 #  ================ End Argument Parsing ==============================
 
@@ -99,7 +104,7 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart, rea
     add_qemu_options += " " + convert_redir_to_qemu_args(redir)
     do_install(arch, clean, real_source)
     fs = Filesystem(Config.ROOTFS)
-    if real_source: config_filesystem(Config.ROOTFS, arch)
+    config_filesystem(Config.ROOTFS, arch, real_source)
     if sync: options.sync_upload(Config.ROOTFS, src=".", dest="/root")
     options.autostart(Config.ROOTFS, autostart)
     run_qemu(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
@@ -178,7 +183,7 @@ def do_install(arch, clean, real_source):
 #         F.write(arch)
 #     pgreen("[+] Installed")
 
-def config_filesystem(rootfs, arch):
+def config_filesystem(rootfs, arch, real_source):
     fs = Filesystem(rootfs)
     fs.rm('/etc/init.d/S40network')
     fs.rm('/etc/init.d/S90tests')
@@ -194,7 +199,7 @@ ifconfig "$IFACE" 10.0.2.15
 route add default gw 10.0.2.2
 echo 'nameserver 10.0.2.3' >> /etc/resolv.conf
 """, right=555)
-    if arch in install_opkg:
+    if arch in install_opkg and real_source:
         fs.create("/root/install_pkg_manager.sh", """
 {install_opkg}
 opkg update
@@ -265,6 +270,16 @@ def do_show():
     pgreen("rootfs size  = {}M".format(size // (1024 * 1024) ))
     Filesystem(Config.ROOTFS).ls("/root")
     print("~" * 80)
+
+@exall(os.makedirs, FileExistsError, ignore)
+def do_offline():
+    URL = "https://github.com/nongiach/arm_now_templates/archive/master.zip"
+    templates = str(Path.home()) + "/.config/arm_now/templates/"
+    master_zip = str(Path.home()) + "/.config/arm_now/templates/master.zip"
+    os.makedirs(templates)
+    download(URL, master_zip, Config.DOWNLOAD_CACHE_DIR)
+    os.chdir(templates)
+    check_call("tar zxf master.zip".format(arch, dest), shell=True)
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ cd preconfig
 for arch in $(arm_now list)
 do
   echo arch ARCH="$arch"
-  arm_now install "$arch" --clean
+  arm_now install "$arch" --clean --real-source
   arm_now resize 100M
   # read
   # mkdir cacert
@@ -32,6 +32,11 @@ then
   sed 's/http:/https:/g' /opt/etc/opkg.conf > /opt/etc/opkg.conf.bak
   mv /opt/etc/opkg.conf.bak /opt/etc/opkg.conf
 
+  opkg install gdb
+  opkg install gdb_server
+  opkg install gdb_legacy # for mips32el
+  opkg install gdbserver_legacy # for mips32el
+  opkg install strace
   ######## 
   # opkg install git
   # opkg install git-http
@@ -49,7 +54,7 @@ EOF
   RET="$?"
   echo "Preconfig.."
   if [[ "$RET" == "0" ]]; then
-    arm_now start --autostart config_ssl_and_pkg_manager.sh
+    arm_now start --autostart config_ssl_and_pkg_manager.sh --real-source
   fi
   echo "Compress.."
   tar -Jcf "$(cat arm_now/arch).tar.xz" arm_now/
