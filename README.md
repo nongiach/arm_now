@@ -1,9 +1,7 @@
 
 
 # arm_now
-arm_now is a qemu powered tool that allows instant setup of VM for reversing/running binaries built for different CPU architectures.
-
-arm_now instantly deploys and starts a virtual machine when needed, I mainly use this for security purpose (reverse/exploit/fuzzing).
+arm_now is a qemu powered tool that allows instant setup of virtual machines on arm cpu, mips, powerpc, nios2, x86 and more, for reverse, exploit, fuzzing and programming purpose.
 
 ![Alt Text](https://github.com/nongiach/arm_now/blob/assets/arm_now.gif)
 
@@ -14,22 +12,23 @@ arm_now instantly deploys and starts a virtual machine when needed, I mainly use
 
 # Start an arm Virtual Machine
 ```sh
-$ mkdir test
-$ cd test
 $ arm_now start armv5-eabi --clean
-Welcome to Buildroot
+Welcome to arm_now
 buildroot login: root
 # uname -m
 armv7l
 ```
 
-# Start a microblazeel Virtual Machine
+# Debug ls binary on mips
 ```sh
-$ arm_now start microblazeel --clean
-Welcome to Buildroot
+$ arm_now start mips32el
+Welcome to arm_now
 buildroot login: root
-# uname -m
-microblaze
+# gdb /bin/ls
+(gdb) start
+Temporary breakpoint 1, 0x00405434 in main ()
+(gdb) x/i $pc
+=> 0x405434 <main+12>:	li	a0,-1
 ```
 
 # The current directory can be shared with the guest
@@ -57,8 +56,7 @@ a_file_created_on_the_host a_file_create_on_the_guest
 
 ```
 $ arm_now start armv5-eabi
-# ./install_pkg_manager.sh
-# opkg list
+# opkg list | grep gdb
 # opkg install gdb
 # opkg install gdb_legacy // for mips32el
 # opkg install python
