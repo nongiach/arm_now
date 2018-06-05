@@ -38,7 +38,9 @@ Press "Ctrl + ]" (Ctrl + altgr + ] on azerty).
 # Wiki
 All features and good use cases are documented in the wiki: https://github.com/nongiach/arm_now/wiki
 - Exploit a heap use after free on PowerPC
-- Game of life a FPGA cpu (MicroBlaze)
+- Run the game of life on a FPGA cpu (MicroBlaze)
+- Share files
+- Install new package
 - ..
 
 # Supported cpu
