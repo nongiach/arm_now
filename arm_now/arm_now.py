@@ -215,7 +215,7 @@ export PATH=$PATH:/opt/bin:/opt/sbin
 def check_dependencies_or_exit():
     dependencies = [
             which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
-            which("qemu-system-arm", ubuntu="apt-get install qemu", arch="pacman -S qemu-arch-extra")
+            which("qemu-system-arm", ubuntu="apt-get install qemu", arch="pacman -S qemu-arch-extra"),
             which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip")
             ]
     if not all(dependencies):
