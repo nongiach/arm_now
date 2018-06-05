@@ -49,6 +49,7 @@ from multiprocessing import Pool
 import contextlib
 import re
 from pathlib import Path
+from subprocess import check_call
 
 # Exall is an exception manager based on decorator/context/callback
 # Check it out: https://github.com/nongiach/exall
@@ -214,7 +215,8 @@ export PATH=$PATH:/opt/bin:/opt/sbin
 def check_dependencies_or_exit():
     dependencies = [
             which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
-            which("qemu-system-arm", ubuntu="apt-get install qemu", arch="yaourt -S qemu-arch-extra")
+            which("qemu-system-arm", ubuntu="apt-get install qemu", arch="pacman -S qemu-arch-extra")
+            which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip")
             ]
     if not all(dependencies):
         print("requirements missing, plz install them", file=sys.stderr)
@@ -277,9 +279,12 @@ def do_offline():
     templates = str(Path.home()) + "/.config/arm_now/templates/"
     master_zip = str(Path.home()) + "/.config/arm_now/templates/master.zip"
     os.makedirs(templates)
+    # download_from_github(arch)
     download(URL, master_zip, Config.DOWNLOAD_CACHE_DIR)
     os.chdir(templates)
-    check_call("tar zxf master.zip".format(arch, dest), shell=True)
+    check_call("unzip master.zip", shell=True)
+    check_call("mv arm_now_templates-master/* .", shell=True)
+    check_call("rm -rf arm_now_templates-master/ README.md master.zip", shell=True)
 
 if __name__ == "__main__":
     main()
