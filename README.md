@@ -1,6 +1,6 @@
 
 
-# arm_now
+# arm_now 1.2
 arm_now is a qemu powered tool that allows instant setup of virtual machines on arm cpu, mips, powerpc, nios2, x86 and more, for reverse, exploit, fuzzing and programming purpose.
 
 ![Alt Text](https://github.com/nongiach/arm_now/blob/assets/arm_now.gif)
@@ -31,9 +31,15 @@ Temporary breakpoint 1, 0x00405434 in main ()
 => 0x405434 <main+12>:	li	a0,-1
 ```
 
+## How to exit qemu
+
+Press "Ctrl + ]" (Ctrl + altgr + ] on azerty).
+
 # Wiki
-All features are documented and there are usage example in the wiki, example install a package, resize the filesystem...
-https://github.com/nongiach/arm_now/wiki
+All features and good use cases are documented in the wiki: https://github.com/nongiach/arm_now/wiki
+- Exploit a heap use after free on PowerPC
+- Game of life a FPGA cpu (MicroBlaze)
+- ..
 
 # Supported cpu
 
@@ -52,9 +58,7 @@ https://github.com/nongiach/arm_now/wiki
 | x86-64 | x86-64-core-i7 |
 | aarch64 | aarch64 |
 
-## How to exit qemu
 
-Press "Ctrl + ]" (Ctrl + altgr + ] on azerty).
 
 ## Writeups
 
