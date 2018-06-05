@@ -4,6 +4,7 @@ import os
 import sys
 import difflib
 import contextlib
+import platform
 
 """
 Utils functions:
