@@ -19,7 +19,7 @@ buildroot login: root
 armv7l
 ```
 
-# Debug ls binary on mips
+# Debug the ls binary on mips
 ```sh
 $ arm_now start mips32el
 Welcome to arm_now
@@ -31,42 +31,11 @@ Temporary breakpoint 1, 0x00405434 in main ()
 => 0x405434 <main+12>:	li	a0,-1
 ```
 
-# The current directory can be shared with the guest
-Use the *--sync* option, you have to type the command *save* before exiting the guest.
-This might not work if there are a lot of files in the current directory.
-```sh
-$ ls
-a_file_created_on_the_host
-$ arm_now start armv5-eabi --clean --sync
-Welcome to Buildroot
-buildroot login: root
-# ls
-a_file_created_on_the_host
-# touch a_file_create_on_the_guest
-# ls
-a_file_created_on_the_host a_file_create_on_the_guest
-# save
-# poweroff
-( back to host, you can also ctrl+] to kill qemu )
-# ls
-a_file_created_on_the_host a_file_create_on_the_guest
-```
+# Wiki
+All features are documented and there are usage example in the wiki, example install a package, resize the filesystem...
+https://github.com/nongiach/arm_now/wiki
 
-# Install a package
-
-```
-$ arm_now start armv5-eabi
-# opkg list | grep gdb
-# opkg install gdb
-# opkg install gdb_legacy // for mips32el
-# opkg install python
-# opkg install strace
-# opkg install binutils
-# opkg install gcc // might need more disk space and not always available.
-```
-This is not supported on all arch yet. Only mips32el, armv5-eabi, armv7-eabihf, and all x86 images.
-
-# Supported
+# Supported cpu
 
 | CPU | images |
 | --- | --- |
@@ -83,26 +52,9 @@ This is not supported on all arch yet. Only mips32el, armv5-eabi, armv7-eabihf, 
 | x86-64 | x86-64-core-i7 |
 | aarch64 | aarch64 |
 
-# Upcoming features
-- briged network
-
-# Q & A
-
 ## How to exit qemu
 
 Press "Ctrl + ]" (Ctrl + altgr + ] on azerty).
-
-## Where filesystem and kernel come from ?
-
-It's based on buildroot, we download them from https://toolchains.bootlin.com/downloads/releases/toolchains/
-
-## Is it a real virtual machine ?
-
-Yes, it's a real virtual machine we use qemu-system-\*. It's not a container or something based on chroot. You can fully debug any elf, all syscall are implemented.
-
-## Who uses arm_now ?
-
-Folks around the world to safely fuzz a program without breaking the host, or exploit/reverse a ctf challenge. If someone sends you a x86-64 binary that you don't trust just 'arm_now start x86-64 --sync' and you will be able to safely run it.
 
 ## Writeups
 
@@ -117,26 +69,6 @@ Ping me for any new writeups.
 | Project | Credit |
 | --- | --- |
 | [Mandibule: linux elf injector for x86 x86_64 arm arm64](https://github.com/ixty/mandibule) | [ixty](https://twitter.com/_ixty_) |
-
-## Where can we talk about arm_now or fuzzing/exploit/reverse?
-Go on freenode irc and "/join #arm_now cpu".
-
-## How can I help ?
-
-I do this project as a hobby, if you find bugs report and I will fix, the code source is very small about 300 lines of python, don't be afraid to pull request.
-- Publish writeups :)
-- A lot of cpu arch are still not supported, bfin, sparc .., at line 28 of arm_now.py you will find a dict that you can play with to add new cpu arch.
-- search a package manager for all arch like => https://wiki.openwrt.org/about/mirrors or http://pkg.entware.net/binaries/
-- full support of cpio rootfs
-- make a script based on buildroot that will compile every existing arch ? this sounds like hours of work :/
-- let the user choose the libc, (musl, glibc, uclibc) // this is very easy 10 min of work look at the code source and pull request !!
-- allow the user to give any binary as input and start it in the right cpu arch, all dependencies should be automatically resolved and installed
-- use buildroot to compile gdb or gdbserver for all arch, have look at utils/test-pkg. strace, ltrace are a plus. Having strace + ltrace + gdbserver on all arch is the goal. Please be awesome and contribute.
-- add mac host support.
-
-## Who to thanks ?
-
-linux kernel, gcc, busybox, qemu, https://buildroot.org, https://toolchains.bootlin.com ...
 
 
 ----
