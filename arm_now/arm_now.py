@@ -21,7 +21,7 @@ Commands:
   clean         Delete the current rootfs.
   install       Download, install and config a rootfs for the given <arch>. (default: armv5-eabi)
   show          Show informations about the rootfs.
-  offline       Donlowad all rootfs and kernel so arm_now can be fully runned offline.
+  offline       Download all rootfs and kernel so arm_now can be fully runned offline.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Options:
   --sync                        Synchronize the current directory with the vm home.
@@ -60,7 +60,7 @@ from .utils import *
 from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
-from .download import  download_image, scrawl_kernel, download
+from .download import  download_image, scrawl_kernel, download, indexof_parse
 
 def main():
     """ Call the function according to the asked command
