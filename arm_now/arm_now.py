@@ -8,6 +8,7 @@ Usage:
   arm_now start [<arch>] [--clean] [-s|--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--real-source] [--redir=<port>]... 
   arm_now clean
   arm_now resize <new_size> [--correct]
+          example: arm_now resize +10G
   arm_now install [<arch>] [--clean] [--real-source]
   arm_now show
   arm_now offline
@@ -237,6 +238,9 @@ def convert_redir_to_qemu_args(redir):
 
 def do_resize(size, correct):
     """ Resize filesystem.
+
+        Example: arm_now resize +10G
+                 Resizing to 10 GigaBytes
     """
     fs = Filesystem(Config.ROOTFS)
     fs.resize(size)
