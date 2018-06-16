@@ -19,6 +19,15 @@ buildroot login: root
 armv7l
 ```
 
+# Resizing an arm Virtual Machine
+```sh
+$ arm_now resize +10G
+WARNING: Image format was not specified for 'arm_now/rootfs.ext2' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+Image resized.
+```
+
 # Debug the ls binary on mips
 ```sh
 $ arm_now start mips32el
