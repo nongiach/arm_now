@@ -12,4 +12,5 @@ git clean -fdx
 ```sh
 python3 setup.py sdist upload -r pypitest
 python3 setup.py sdist upload -r pypi
+pip3 install --no-cache-dir arm_now
 ```
