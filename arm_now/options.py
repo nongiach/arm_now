@@ -16,7 +16,10 @@ def clean(config):
 def autostart(rootfs, script):
     fs = Filesystem(rootfs)
     if script:
-        fs.put(script, "/etc/init.d/S90_user_autostart", right=555)
+        with open(script, "rb") as F, tempfile.NamedTemporaryFile() as temp:
+            temp.write(F.read())
+            temp.flush()
+            fs.put(temp.name, "/etc/init.d/S90_user_autostart", right=555)
     else:
         fs.rm("/etc/init.d/S90_user_autostart")
 

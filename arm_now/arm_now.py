@@ -8,7 +8,6 @@ Usage:
   arm_now start [<arch>] [--clean] [-s|--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--real-source] [--redir=<port>]... 
   arm_now clean
   arm_now resize <new_size> [--correct]
-          example: arm_now resize +10G
   arm_now install [<arch>] [--clean] [--real-source]
   arm_now show
   arm_now offline
@@ -18,7 +17,7 @@ Usage:
 Commands:
   list          List all available images for all cpu.
   start         Start a vm with a <arch> cpu. (default: armv5-eabi)
-  resize        Resize the current rootfs. (example: resize 1G)
+  resize        Resize the current rootfs. (example: arm_now resize 1G, or +1G)
   clean         Delete the current rootfs.
   install       Download, install and config a rootfs for the given <arch>. (default: armv5-eabi)
   show          Show informations about the rootfs.
