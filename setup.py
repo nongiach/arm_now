@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 
 setup(name='arm_now',
-        version='1.21',
+        version='1.22',
         author='@chaign_c',
         url='https://github.com/nongiach/arm_now',
         packages=['arm_now'],
