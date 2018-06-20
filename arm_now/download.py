@@ -59,11 +59,12 @@ def scrawl_kernel(arch):
     else:
         libc = None
 
-    libc = links_dict[state][libc]
+    target = links_dict[state][libc]
 
-    dtb = libc.get("dtb", None)
-    rootfs = libc.get("rootfs", None)
-    kernel = libc.get("kernel", None)
+    dtb = target.get("dtb", None)
+    rootfs = target.get("rootfs", None)
+    kernel = target.get("kernel", None)
+    
     return kernel, dtb, rootfs
 
 def indexof_parse(url):
