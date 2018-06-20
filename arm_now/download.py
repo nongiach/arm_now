@@ -48,13 +48,23 @@ def scrawl_kernel(arch):
             if filetype is None:
                 return None, None, None
             links_dict[version][libc][filetype] = url + link
-    state = "stable" if "stable" in links_dict else "bleeding-edge"
-    libc = "uclibc" if "uclibc" in links_dict[state] else None
-    libc = "musl" if "musl" in links_dict[state] else libc
-    libc = "glibc" if "glibc" in links_dict[state] else libc
-    dtb = None if "dtb" not in links_dict[state][libc] else links_dict[state][libc]["dtb"]
-    rootfs = None if "rootfs" not in links_dict[state][libc] else links_dict[state][libc]["rootfs"]
-    kernel = None if "kernel" not in links_dict[state][libc] else links_dict[state][libc]["kernel"]
+
+    state = "bleeding-edge"
+    if "stable" in links_dict:
+        state = "stable"
+
+    for libc in ["uclibc", "musl", "glibc"]:
+        if libc in links_dict[state]:
+            break
+    else:
+        libc = None
+
+    target = links_dict[state][libc]
+
+    dtb = target.get("dtb", None)
+    rootfs = target.get("rootfs", None)
+    kernel = target.get("kernel", None)
+    
     return kernel, dtb, rootfs
 
 def indexof_parse(url):
