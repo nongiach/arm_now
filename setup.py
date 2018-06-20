@@ -6,7 +6,7 @@ if sys.version.startswith("2"):
     sys.exit(1)
 
 setup(name='arm_now',
-        version='1.23',
+        version='1.24',
         author='@chaign_c',
         url='https://github.com/nongiach/arm_now',
         packages=['arm_now'],
