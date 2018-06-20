@@ -1,7 +1,12 @@
 from setuptools import setup, Extension
+import sys
+
+if sys.version.startswith("2"):
+    print >>sys.stderr, "arm_now is only for python3 => pip3 install arm_now"
+    sys.exit(1)
 
 setup(name='arm_now',
-        version='1.22',
+        version='1.23',
         author='@chaign_c',
         url='https://github.com/nongiach/arm_now',
         packages=['arm_now'],

@@ -67,7 +67,7 @@ def main():
         Read above to acknowledge supported commands
     """
     check_dependencies_or_exit()
-    a = docopt(__doc__, version='arm_now 1.22')
+    a = docopt(__doc__, version='arm_now 1.23')
     if not a["<arch>"] and os.path.isfile(Config.ARCH):
         with open(Config.ARCH) as F:
             a["<arch>"] = F.read()
