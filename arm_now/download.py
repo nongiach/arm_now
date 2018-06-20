@@ -53,7 +53,7 @@ def scrawl_kernel(arch):
     if "stable" in links_dict:
         state = "stable"
 
-    for libc in ["uclibc", "musl", "glibc"]:
+    for libc in ["glibc", "uclibc", "musl"]:
         if libc in links_dict[state]:
             break
     else:
