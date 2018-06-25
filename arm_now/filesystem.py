@@ -66,7 +66,7 @@ class Ext2_Ext4:
         subprocess.check_call(["e2fsck", "-fy", self.rootfs])
         subprocess.check_call(["resize2fs", self.rootfs])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        logger.success("Resized to {size}".format(size=size))
+        logger.info("Resized to {size}".format(size=size))
 
     @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
     def correct(self):
@@ -89,8 +89,9 @@ class Ext2_Ext4:
 
 
 class Cpio:
-    def __init__(self, path):
+    def __init__(self, path, filemagic):
         self.rootfs = path
+        self.filemagic = filemagic
 
     def implemented(self):
         return False
@@ -99,34 +100,34 @@ class Cpio:
         logger.error("__CALL__ {}".format(t))
 
     def put(self, src, dest, right=444):
-        logger.warning("put is not implented for {}".format(self.rootfs))
+        logger.warning("put is not implented for {}".format(self.filemagic))
 
     def get(self, src, dest):
-        logger.warning("get is not implented for {}".format(self.rootfs))
+        logger.warning("get is not implented for {}".format(self.filemagic))
 
     def rm(self, filename, on_error=print_error):
-        logger.warning("rm is not implented for {}".format(self.rootfs))
+        logger.warning("rm is not implented for {}".format(self.filemagic))
 
     def create(self, dest, content, right=444):
-        logger.warning("create is not implented for {}".format(self.rootfs))
+        logger.warning("create is not implented for {}".format(self.filemagic))
 
     def sed(self, regex, path, right=444):
-        logger.warning("sed is not implented for {}".format(self.rootfs))
+        logger.warning("sed is not implented for {}".format(self.filemagic))
 
     @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
     def resize(self, size):
         subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        logger.success("Resized to {size}".format(size=size))
+        logger.info("Resized to {}".format(size))
 
     def correct(self, regex, path, right=444):
-        logger.warning("correct is not implented for {}".format(self.rootfs))
+        logger.warning("correct is not implented for {}".format(self.filemagic))
 
     def check(self):
-        logger.warning("check is not implented for {}".format(self.rootfs))
+        logger.warning("check is not implented for {}".format(self.filemagic))
 
     def ls(self, path):
-        logger.warning("ls is not implented for {}".format(self.rootfs))
+        logger.warning("ls is not implented for {}".format(self.filemagic))
 
 
 class Tar:
@@ -159,7 +160,7 @@ class Tar:
     def resize(self, size):
         subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        logger.success("Resized to {size}".format(size=size))
+        logger.info("Resized to {size}".format(size=size))
 
     def correct(self, regex, path, right=444):
         logger.warning("correct is not implented for {}".format(self.filemagic))

@@ -293,8 +293,8 @@ def do_show():
         arch = F.read()
     print(" Info ".center(80, "~"))
     size = os.path.getsize(Config.ROOTFS)
-    logger.success("arch         = {}".format(arch))
-    logger.success("rootfs size  = {}M".format(size // (1024 * 1024)))
+    logger.info("arch         = {}".format(arch))
+    logger.info("rootfs size  = {}M".format(size // (1024 * 1024)))
     Filesystem(Config.ROOTFS).ls("/root")
     print("~" * 80)
 

@@ -66,4 +66,4 @@ def sync_download(rootfs, src, dest):
         subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
     else:
-        logger.success("Use the 'save' command before exiting the vm to retrieve all files on the host")
+        logger.info("Use the 'save' command before exiting the vm to retrieve all files on the host")
