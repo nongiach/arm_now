@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-#  ================ Start Argument Parsing ==============================
+#  ================ Start Argument Parsing ==============================
+
 """arm_now.
 Usage:
   arm_now list [--all]
-  arm_now start [<arch>] [--clean] [-s|--sync] [--offline] [--autostart=<script>] [--add-qemu-options=<options>] [--real-source] [--redir=<port>]... 
+  arm_now start [<arch>] [--clean] [-s|--sync] [--offline]
+                [--autostart=<script>] [--add-qemu-options=<options>]
+                [--real-source] [--redir=<port>]...
   arm_now clean
   arm_now resize <new_size> [--correct]
   arm_now install [<arch>] [--clean] [--real-source]
@@ -47,21 +50,21 @@ import sys
 import re
 from multiprocessing import Pool
 import contextlib
-import re
 from pathlib import Path
 from subprocess import check_call
 from .logging import logger
 
-# Exall is an exception manager based on decorator/context/callback
+# Exall is an exception manager based on decorator/context/callback
 # Check it out: https://github.com/nongiach/exall
-from exall import exall, ignore, print_warning, print_traceback, print_error
+from exall import exall, ignore
 from docopt import docopt
 
-from .utils import *
+from .utils import maybe_you_meant, which
 from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
-from .download import  download_image, scrawl_kernel, download, indexof_parse
+from .download import download_image, scrawl_kernel, download, indexof_parse
+
 
 def main():
     """ Call the function according to the asked command
@@ -76,10 +79,10 @@ def main():
         do_list(a["--all"])
     elif a["start"]:
         do_start(a["<arch>"] or "armv5-eabi",
-                a["--clean"], a["--sync"] or a["-s"],
-                a["--offline"], a["--redir"],
-                ' '.join(a["--add-qemu-options"]),
-                a["--autostart"], a["--real-source"])
+                 a["--clean"], a["--sync"] or a["-s"],
+                 a["--offline"], a["--redir"],
+                 ' '.join(a["--add-qemu-options"]),
+                 a["--autostart"], a["--real-source"])
     elif a["clean"]:
         options.clean(Config)
     elif a["resize"]:
@@ -92,7 +95,7 @@ def main():
         do_offline()
 
 
-#  ================ End Argument Parsing ==============================
+#  ================ End Argument Parsing ==============================
 
 def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart, real_source):
     """Setup and start a virtualmachine using qemu.
@@ -107,11 +110,14 @@ def do_start(arch, clean, sync, offline, redir, add_qemu_options, autostart, rea
     do_install(arch, clean, real_source)
     fs = Filesystem(Config.ROOTFS)
     config_filesystem(Config.ROOTFS, arch, real_source)
-    if sync: options.sync_upload(Config.ROOTFS, src=".", dest="/root")
+    if sync:
+        options.sync_upload(Config.ROOTFS, src=".", dest="/root")
     options.autostart(Config.ROOTFS, autostart)
     run_qemu(arch, Config.KERNEL, Config.DTB, Config.ROOTFS, add_qemu_options)
     fs.check()
-    if sync: options.sync_download(Config.ROOTFS, "/root.tar", ".")
+    if sync:
+        options.sync_download(Config.ROOTFS, "/root.tar", ".")
+
 
 def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
     dtb = "" if not os.path.exists(dtb) else "-dtb {}".format(dtb)
@@ -129,8 +135,9 @@ def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
                -no-reboot
        stty intr ^c
     """.format(arch=arch, qemu_config=qemu_config, options=options, dtb=dtb)
-    pgreen(cmd)
+    logger.success("{}".format(cmd))
     os.system(cmd)
+
 
 def is_already_created(arch):
     """ if the current kernel and rootfs is not the same arch then delete them """
@@ -146,35 +153,38 @@ def is_already_created(arch):
     options.clean(Config)
     return False
 
+
 def do_install(arch, clean, real_source):
     """ download and setup filesystem and kernel
     """
-    if clean: options.clean(Config)
+    if clean:
+        options.clean(Config)
     if arch not in qemu_options:
-        pred("ERROR: I don't know this arch='{}' yet".format(arch), file=sys.stderr)
-        porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
+        logger.error("I don't know this arch='{}' yet".format(arch))
+        logger.warning("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()))
         sys.exit(1)
     if is_already_created(arch):
-        porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
+        logger.warning("{} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
         return
-    with contextlib.suppress(FileExistsError): os.mkdir(Config.DIR)
+    with contextlib.suppress(FileExistsError):
+        os.mkdir(Config.DIR)
     download_image(arch, dest=Config.DIR, real_source=real_source)
-    pgreen("[+] Installed")
+    logger.success("Installed")
 
 # def do_install_real_source(arch, clean=False):
 #     """ download and setup filesystem and kernel
 #     """
 #     if clean: options.clean(Config)
 #     if arch not in qemu_options:
-#         pred("ERROR: I don't know this arch='{}' yet".format(arch), file=sys.stderr)
-#         porange("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()), file=sys.stderr)
+#         logger.error("I don't know this arch='{}' yet".format(arch))
+#         logger.info("maybe you meant: {}".format(maybe_you_meant(arch, qemu_options.keys()) or qemu_options.keys()),)
 #         sys.exit(1)
 #     kernel, dtb, rootfs = scrawl_kernel(arch)
 #     if kernel is None or rootfs is None:
-#         pred("ERROR: couldn't download files for this arch", file=sys.stderr)
+#         logger.error("couldn't download files for this arch")
 #         sys.exit(1)
 #     if is_already_created(arch):
-#         porange("WARNING: {} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
+#         logger.warning("{} already exists, use --clean to restart with a fresh filesystem".format(Config.DIR))
 #         return
 #     with contextlib.suppress(FileExistsError):
 #         os.mkdir(Config.DIR)
@@ -183,19 +193,20 @@ def do_install(arch, clean, real_source):
 #     download(rootfs, Config.ROOTFS, Config.DOWNLOAD_CACHE_DIR)
 #     with open(Config.DIR + "/arch", "w") as F:
 #         F.write(arch)
-#     pgreen("[+] Installed")
+#     logger.success("Installed")
+
 
 def config_filesystem(rootfs, arch, real_source):
     fs = Filesystem(rootfs)
     fs.rm('/etc/init.d/S40network')
     fs.rm('/etc/init.d/S90tests')
     fs.rm('/etc/issue')
-    fs.create("/etc/issue", 
-            'Welcome to arm_now\n')
+    fs.create("/etc/issue",
+              "Welcome to arm_now\n")
     fs.create("/etc/init.d/S95_how_to_kill_qemu",
-            'echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"\n',
-            right=555)
-    fs.create("/etc/init.d/S40_network","""
+              'echo -e "\033[0;31mpress ctrl+] to kill qemu\033[0m"\n',
+              right=555)
+    fs.create("/etc/init.d/S40_network", """
 IFACE=$(ip a | grep -o ':.*: ' | grep -v ': lo: ' | grep -o '[^ :@]*' | head -n 1)
 ifconfig "$IFACE" 10.0.2.15
 route add default gw 10.0.2.2
@@ -213,19 +224,25 @@ export PATH=$PATH:/opt/bin:/opt/sbin
                 """, right=555)
     fs.sed('s/init.d\/S/init.d\/K/g', '/etc/init.d/rcK', right=755)
 
+
 def check_dependencies_or_exit():
     dependencies = [
             which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
-            which("qemu-system-arm", ubuntu="apt-get install qemu", kali="apt-get install qemu-system", arch="pacman -S qemu-arch-extra"),
+            which("qemu-system-arm",
+                  ubuntu="apt-get install qemu",
+                  kali="apt-get install qemu-system",
+                  arch="pacman -S qemu-arch-extra"),
             which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip")
             ]
     if not all(dependencies):
         logger.error("requirements missing, plz install them", file=sys.stderr)
         sys.exit(1)
 
+
 re_redir = re.compile(r"(tcp|udp):\d+::\d+")
+
+
 def convert_redir_to_qemu_args(redir):
-    qemu_redir = []
     for r in redir:
         if not re_redir.match(r):
             logger.error(("ERROR: Invalid argument: --redir {}\n"
@@ -248,11 +265,13 @@ def do_resize(size, correct):
     if correct:
         fs.correct()
 
+
 def test_arch(arch):
     arch = arch[:-1]
     kernel, dtb, rootfs = scrawl_kernel(arch)
     if kernel and rootfs:
         logger.info("{}: OK".format(arch))
+
 
 def do_list(all=False):
     """ List all compactible cpu architecture
@@ -263,20 +282,22 @@ def do_list(all=False):
         url = "https://toolchains.bootlin.com/downloads/releases/toolchains/"
         all_arch = indexof_parse(url)
         p = Pool(10)
-        ret = p.map(test_arch, all_arch)
+        p.map(test_arch, all_arch)
+
 
 def do_show():
     if not os.path.isfile(Config.ARCH) or not os.path.isfile(Config.ROOTFS):
-        pred("File missing")
+        logger.error("File missing")
         return
     with open(Config.ARCH) as F:
         arch = F.read()
     print(" Info ".center(80, "~"))
     size = os.path.getsize(Config.ROOTFS)
-    pgreen("arch         = {}".format(arch))
-    pgreen("rootfs size  = {}M".format(size // (1024 * 1024) ))
+    logger.success("arch         = {}".format(arch))
+    logger.success("rootfs size  = {}M".format(size // (1024 * 1024)))
     Filesystem(Config.ROOTFS).ls("/root")
     print("~" * 80)
+
 
 @exall(os.makedirs, FileExistsError, ignore)
 def do_offline():
@@ -290,6 +311,7 @@ def do_offline():
     check_call("unzip master.zip", shell=True)
     check_call("mv arm_now_templates-master/* .", shell=True)
     check_call("rm -rf arm_now_templates-master/ README.md master.zip", shell=True)
+
 
 if __name__ == "__main__":
     main()
