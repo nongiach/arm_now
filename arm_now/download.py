@@ -7,16 +7,18 @@ from subprocess import check_call
 from collections import defaultdict
 from pathlib import Path
 
-# Exall is an exception manager based on decorator/context/callback
+# Exall is an exception manager based on decorator/context/callback
 # Check it out: https://github.com/nongiach/exall
-from exall import exall, ignore, print_warning, print_traceback, print_error
+from exall import exall, ignore
 from pySmartDL import SmartDL
 from .config import Config
+from .utils import pred
+
 
 @exall(os.mkdir, FileExistsError, ignore)
 def download(url, filename, cache_directory):
     filename_cache = url.split('/')[-1]
-    filename_cache = ''.join([ c for c in filename_cache if c.isdigit() or c.isalpha() ])
+    filename_cache = ''.join([c for c in filename_cache if c.isdigit() or c.isalpha()])
     filename_cache = cache_directory + "/" + filename_cache
     if os.path.exists(filename):
         return
@@ -31,13 +33,14 @@ def download(url, filename, cache_directory):
         obj.start()
         shutil.copyfile(filename_cache, filename)
 
+
 def scrawl_kernel(arch):
     re_href = re.compile('href="?({arch}[^ <>"]*)"?'.format(arch=arch))
     url = "https://toolchains.bootlin.com/downloads/releases/toolchains/{arch}/test-system/".format(arch=arch)
     response = requests.get(url + "?C=M;O=D")
     text = response.text
     links = re_href.findall(text)
-    links_dict = defaultdict(lambda : defaultdict(dict))
+    links_dict = defaultdict(lambda: defaultdict(dict))
     for link in links:
         version = get_link_version(link)
         libc = get_link_libc(link)
@@ -64,8 +67,9 @@ def scrawl_kernel(arch):
     dtb = target.get("dtb", None)
     rootfs = target.get("rootfs", None)
     kernel = target.get("kernel", None)
-    
+
     return kernel, dtb, rootfs
+
 
 def indexof_parse(url):
     re_href = re.compile('\[DIR\].*href="?([^ <>"]*)"?')
@@ -74,18 +78,23 @@ def indexof_parse(url):
     links = re_href.findall(text)
     return links
 
+
 libc = ["uclibc", "glibc", "musl"]
+
+
 def get_link_libc(link):
     for i_libc in libc:
         if i_libc in link:
             return i_libc
     return None
 
+
 def get_link_version(link):
     if "bleeding-edge" in link:
         return "bleeding-edge"
     else:
         return "stable"
+
 
 def get_link_filetype(link):
     if ".cpio" in link or ".ext2" in link or "rootfs" in link:
@@ -98,6 +107,7 @@ def get_link_filetype(link):
     # os.kill(0, 9)
     return None
 
+
 @exall(os.mkdir, FileExistsError, ignore)
 def download_from_github(arch):
     templates = str(Path.home()) + "/.config/arm_now/templates/"
@@ -106,6 +116,7 @@ def download_from_github(arch):
     URL = "https://github.com/nongiach/arm_now_templates/raw/master/"
     download(URL + filename, templates + filename, Config.DOWNLOAD_CACHE_DIR)
 
+
 def download_image(arch, *, dest, real_source):
     if real_source:
         kernel, dtb, rootfs = scrawl_kernel(arch)
@@ -113,7 +124,8 @@ def download_image(arch, *, dest, real_source):
             pred("ERROR: couldn't download files for this arch", file=sys.stderr)
             sys.exit(1)
         download(kernel, dest + Config.kernel, Config.DOWNLOAD_CACHE_DIR)
-        if dtb: download(dtb, dest + Config.dtb, Config.DOWNLOAD_CACHE_DIR)
+        if dtb:
+            download(dtb, dest + Config.dtb, Config.DOWNLOAD_CACHE_DIR)
         download(rootfs, dest + Config.rootfs, Config.DOWNLOAD_CACHE_DIR)
     else:
         download_from_github(arch)
