@@ -1,4 +1,5 @@
-# Error:
+# Error:
+
 ```sh
 Failed building wheel for pySmartDL
   Running setup.py clean for pySmartDL
@@ -11,7 +12,8 @@ You are using pip version 8.1.1, however version 9.0.1 is available.
 You should consider upgrading via the 'pip install --upgrade pip' command.
 ```
 
-# Solution:
+# Solution:
+
 ```sh
 pip install --upgrade pip
 ```
