@@ -7,6 +7,8 @@ import tempfile
 import magic
 from exall import exall, ignore, print_warning, print_traceback, print_error
 from .utils import *
+from .logging import logger
+
 
 def Filesystem(path):
     filemagic = magic.from_file(path)
@@ -53,7 +55,7 @@ class Ext2_Ext4:
         Insecure !! command injection here but regex is not exposed to user input
         """
         with tempfile.TemporaryDirectory() as tempdir:
-            print("Tempdir {}".format(tempdir))
+            logger.info("Tempdir {}".format(tempdir))
             new = tempdir + "/new"
             old = tempdir + "/old"
             self.get(path, old)
@@ -67,21 +69,21 @@ class Ext2_Ext4:
         subprocess.check_call(["e2fsck", "-fy", self.rootfs])
         subprocess.check_call(["resize2fs", self.rootfs])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        pgreen("[+] Resized to {size}".format(size=size))
+        logger.success("Resized to {size}".format(size=size))
 
     @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
     def correct(self):
-        porange("[+] Correcting ... (be patient)".format(size=size))
+        logger.info("Correcting ... (be patient)".format(size=size))
         subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS])
 
     def check(self):
         try:
-            print(" Checking the filesystem ".center(80, "+"))
+            logger.info(" Checking the filesystem ".center(80, "+"))
             subprocess.check_call(["e2fsck", "-vfy", self.rootfs])
         except subprocess.CalledProcessError as e:
-            print(e)
+            logger.error("Exception: {}".format(e))
             if str(e).find("returned non-zero exit status 1."):
-                porange("It's ok but next time poweroff")
+                logger.warning("It's ok but next time poweroff")
 
     def ls(self, path):
         ls_cmd = ["e2ls", self.rootfs + ":" + path]

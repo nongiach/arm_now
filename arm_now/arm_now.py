@@ -50,6 +50,7 @@ import contextlib
 import re
 from pathlib import Path
 from subprocess import check_call
+from .logging import logger
 
 # Exall is an exception manager based on decorator/context/callback
 # Check it out: https://github.com/nongiach/exall
@@ -116,7 +117,7 @@ def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
     dtb = "" if not os.path.exists(dtb) else "-dtb {}".format(dtb)
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
-    print("Starting qemu-system-{}".format(arch))
+    logger.debug("Starting qemu-system-{}".format(arch))
     qemu_config = "-serial stdio -monitor /dev/null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
     cmd = """stty intr ^]
        export QEMU_AUDIO_DRV="none"
@@ -219,7 +220,7 @@ def check_dependencies_or_exit():
             which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip")
             ]
     if not all(dependencies):
-        print("requirements missing, plz install them", file=sys.stderr)
+        logger.error("requirements missing, plz install them", file=sys.stderr)
         sys.exit(1)
 
 re_redir = re.compile(r"(tcp|udp):\d+::\d+")
@@ -227,10 +228,11 @@ def convert_redir_to_qemu_args(redir):
     qemu_redir = []
     for r in redir:
         if not re_redir.match(r):
-            pred("ERROR: Invalid argument: --redir {}".format(r))
-            print("example:")
-            print("\tredirect tcp host 8000 to guest 80: --redir tcp:8000::80")
-            print("\tredirect udp host 4444 to guest 44: --redir udp:4444::44")
+            logger.error(("ERROR: Invalid argument: --redir {}\n"
+                          "Example: \n"
+                          "\tredirect tcp host 8000 to guest 80: --redir tcp:8000::80\n"
+                          "\tredirect udp host 4444 to guest 44: --redir udp:4444::44\n"
+                          ).format(r))
             sys.exit(1)
     return ''.join(map("-redir {} ".format, redir))
 
@@ -250,7 +252,7 @@ def test_arch(arch):
     arch = arch[:-1]
     kernel, dtb, rootfs = scrawl_kernel(arch)
     if kernel and rootfs:
-        print("{}: OK".format(arch))
+        logger.info("{}: OK".format(arch))
 
 def do_list(all=False):
     """ List all compactible cpu architecture

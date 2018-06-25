@@ -3,6 +3,7 @@ import shutil
 
 from exall import exall, ignore, print_warning, print_traceback, print_error
 from .filesystem import *
+from .logging import logger
 
 @exall(os.unlink, FileNotFoundError, ignore)
 def clean(config):
@@ -27,7 +28,7 @@ def sync_upload(rootfs, src, dest):
     fs = Filesystem(rootfs)
     if not fs.implemented():
         return
-    print("Adding current directory to the filesystem..")
+    logger.info("Adding current directory to the filesystem..")
     with tempfile.TemporaryDirectory() as tmpdirname:
         files = [ i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-") ]
         if files:
@@ -58,4 +59,4 @@ def sync_download(rootfs, src, dest):
         subprocess.check_call("tar xf root.tar".split(' '))
         os.unlink("root.tar")
     else:
-        pgreen("Use the 'save' command before exiting the vm to retrieve all files on the host")
+        logger.success("Use the 'save' command before exiting the vm to retrieve all files on the host")

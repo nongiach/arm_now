@@ -12,6 +12,7 @@ from pathlib import Path
 from exall import exall, ignore, print_warning, print_traceback, print_error
 from pySmartDL import SmartDL
 from .config import Config
+from .logging import logger
 
 @exall(os.mkdir, FileExistsError, ignore)
 def download(url, filename, cache_directory):
@@ -21,10 +22,10 @@ def download(url, filename, cache_directory):
     if os.path.exists(filename):
         return
     elif os.path.exists(filename_cache):
-        print("Already downloaded")
+        logger.info("Already downloaded")
         shutil.copyfile(filename_cache, filename)
     else:
-        print("\nDownloading {} from {}".format(filename, url))
+        logger.info("\nDownloading {} from {}".format(filename, url))
         os.mkdir(cache_directory)
         # wget.download(url, out=filename_cache)
         obj = SmartDL(url, filename_cache)
@@ -94,7 +95,7 @@ def get_link_filetype(link):
         return "dtb"
     elif "Image" in link or "vmlinux" in link or "linux.bin" in link:
         return "kernel"
-    print("ERROR: I don't know this kind of file {}".format(link), file=sys.stderr)
+    logger.error("I don't know this kind of file {}".format(link), file=sys.stderr)
     # os.kill(0, 9)
     return None
 

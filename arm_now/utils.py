@@ -22,8 +22,8 @@ def pcolor(color, *kargs, **kwargs):
     """ proxy print arguments """
     output = sys.stdout if "file" not in kwargs else kwargs["file"]
     with contextlib.redirect_stdout(output):
-        print(color,end="")
-        print(*kargs, **kwargs,end="")
+        print(color, end="")
+        print(*kargs, **kwargs, end="")
         print("\x1B[0m")
 
 porange = functools.partial(pcolor, "\x1B[33m")
@@ -52,7 +52,7 @@ def avoid_parameter_injection(params):
     new_params = []
     for p in params:
         if p.startswith("-"):
-            print("WARNING: parameter injection detected, '{}' will be ingored".format(p))
+            logger.warning("Parameter injection detected, '{}' will be ingored".format(p))
         else:
             new_params.append(p)
     return new_params
