@@ -135,7 +135,7 @@ def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
                -no-reboot
        stty intr ^c
     """.format(arch=arch, qemu_config=qemu_config, options=options, dtb=dtb)
-    logger.success("{}".format(cmd))
+    logger.info("{}".format(cmd))
     os.system(cmd)
 
 
@@ -169,7 +169,7 @@ def do_install(arch, clean, real_source):
     with contextlib.suppress(FileExistsError):
         os.mkdir(Config.DIR)
     download_image(arch, dest=Config.DIR, real_source=real_source)
-    logger.success("Installed")
+    logger.info("Installed")
 
 # def do_install_real_source(arch, clean=False):
 #     """ download and setup filesystem and kernel
@@ -193,7 +193,7 @@ def do_install(arch, clean, real_source):
 #     download(rootfs, Config.ROOTFS, Config.DOWNLOAD_CACHE_DIR)
 #     with open(Config.DIR + "/arch", "w") as F:
 #         F.write(arch)
-#     logger.success("Installed")
+#     logger.info("Installed")
 
 
 def config_filesystem(rootfs, arch, real_source):
