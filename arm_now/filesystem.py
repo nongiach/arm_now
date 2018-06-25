@@ -1,12 +1,12 @@
 import subprocess
 import tempfile
-import os
 import sys
-import tempfile
 
 import magic
-from exall import exall, ignore, print_warning, print_traceback, print_error
-from .utils import *
+from exall import exall, print_error
+from .utils import pred, porange, pgreen
+from .config import Config
+
 
 def Filesystem(path):
     filemagic = magic.from_file(path)
@@ -19,6 +19,7 @@ def Filesystem(path):
     pred("UnknownFileSystem {}".format(filemagic))
     sys.exit(1)
 
+
 class Ext2_Ext4:
     def __init__(self, path, filemagic):
         self.rootfs = path
@@ -28,8 +29,7 @@ class Ext2_Ext4:
         return True
 
     def put(self, src, dest, right=444):
-        subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') +
-                [str(right), src, self.rootfs + ":" + dest])
+        subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') + [str(right), src, self.rootfs + ":" + dest])
 
     def get(self, src, dest):
         subprocess.check_call(["e2cp", self.rootfs + ":" + src, dest])
@@ -44,8 +44,7 @@ class Ext2_Ext4:
         with tempfile.NamedTemporaryFile() as temp:
             temp.write(bytes(content, "utf-8"))
             temp.flush()
-            subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') +
-                    [str(right), temp.name, self.rootfs + ":" + dest])
+            subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') + [str(right), temp.name, self.rootfs + ":" + dest])
 
     def sed(self, regex, path, right=444):
         """ Replace with sed in the roofs
@@ -88,6 +87,7 @@ class Ext2_Ext4:
         print((" " + " ".join(ls_cmd) + " ").center(80, "~"))
         subprocess.check_call(ls_cmd)
 
+
 class Cpio:
     def __init__(self, path):
         self.rootfs = path
@@ -127,6 +127,7 @@ class Cpio:
 
     def ls(self, path):
         porange("ls is not implented for {}".format(self.rootfs))
+
 
 class Cpio:
     def __init__(self, path, filemagic):
@@ -168,6 +169,7 @@ class Cpio:
 
     def ls(self, path):
         porange("ls is not implented for {}".format(self.filemagic))
+
 
 class Tar:
     def __init__(self, path, filemagic):
