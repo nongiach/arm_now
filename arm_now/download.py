@@ -12,7 +12,7 @@ from pathlib import Path
 from exall import exall, ignore
 from pySmartDL import SmartDL
 from .config import Config
-from .utils import pred
+from .logging import logger
 
 
 @exall(os.mkdir, FileExistsError, ignore)
@@ -23,10 +23,10 @@ def download(url, filename, cache_directory):
     if os.path.exists(filename):
         return
     elif os.path.exists(filename_cache):
-        print("Already downloaded")
+        logger.info("Already downloaded")
         shutil.copyfile(filename_cache, filename)
     else:
-        print("\nDownloading {} from {}".format(filename, url))
+        logger.info("\nDownloading {} from {}".format(filename, url))
         os.mkdir(cache_directory)
         # wget.download(url, out=filename_cache)
         obj = SmartDL(url, filename_cache)
@@ -103,7 +103,7 @@ def get_link_filetype(link):
         return "dtb"
     elif "Image" in link or "vmlinux" in link or "linux.bin" in link:
         return "kernel"
-    print("ERROR: I don't know this kind of file {}".format(link), file=sys.stderr)
+    logger.error("I don't know this kind of file {}".format(link), file=sys.stderr)
     # os.kill(0, 9)
     return None
 
@@ -121,7 +121,7 @@ def download_image(arch, *, dest, real_source):
     if real_source:
         kernel, dtb, rootfs = scrawl_kernel(arch)
         if kernel is None or rootfs is None:
-            pred("ERROR: couldn't download files for this arch", file=sys.stderr)
+            logger.error("Couldn't download files for this arch")
             sys.exit(1)
         download(kernel, dest + Config.kernel, Config.DOWNLOAD_CACHE_DIR)
         if dtb:

@@ -5,6 +5,8 @@ import difflib
 import contextlib
 import platform
 
+from .logging import logger
+
 """
 Utils functions:
     pcolor: Print with beautiful colors: porange, pgreen, pred.
@@ -16,20 +18,6 @@ Utils functions:
     add_local_files: Add multiple files to an existing ex2 image.
     ext2_rm: Delete a file from an existing ext2 image.
 """
-
-
-def pcolor(color, *args, **kwargs):
-    """ proxy print arguments """
-    output = sys.stdout if "file" not in kwargs else kwargs["file"]
-    with contextlib.redirect_stdout(output):
-        print(color, end="")
-        print(*args, end="", **kwargs)
-        print("\x1B[0m")
-
-
-porange = functools.partial(pcolor, "\x1B[33m")
-pgreen = functools.partial(pcolor, "\x1B[32m")
-pred = functools.partial(pcolor, "\x1B[31m")
 
 
 @functools.lru_cache()
@@ -57,7 +45,7 @@ def avoid_parameter_injection(params):
     new_params = []
     for p in params:
         if p.startswith("-"):
-            print("WARNING: parameter injection detected, '{}' will be ingored".format(p))
+            logger.warning("Parameter injection detected, '{}' will be ingored".format(p))
         else:
             new_params.append(p)
     return new_params

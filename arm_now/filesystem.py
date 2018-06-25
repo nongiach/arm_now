@@ -4,8 +4,8 @@ import sys
 
 import magic
 from exall import exall, print_error
-from .utils import pred, porange, pgreen
 from .config import Config
+from .logging import logger
 
 
 def Filesystem(path):
@@ -16,7 +16,7 @@ def Filesystem(path):
         return Cpio(path, filemagic)
     if "tar" in filemagic:
         return Tar(path, filemagic)
-    pred("UnknownFileSystem {}".format(filemagic))
+    logger.error("UnknownFileSystem {}".format(filemagic))
     sys.exit(1)
 
 
@@ -36,7 +36,7 @@ class Ext2_Ext4:
 
     def rm(self, filename):
         def e2rm_warning(_exception):
-            porange("WARNING: e2rm file already suppressed")
+            logger.warning("e2rm file already suppressed")
         with exall(subprocess.check_call, subprocess.CalledProcessError, e2rm_warning):
             subprocess.check_call(["e2rm", self.rootfs + ":" + filename])
 
@@ -52,7 +52,7 @@ class Ext2_Ext4:
         Insecure !! command injection here but regex is not exposed to user input
         """
         with tempfile.TemporaryDirectory() as tempdir:
-            print("Tempdir {}".format(tempdir))
+            logger.info("Tempdir {}".format(tempdir))
             new = tempdir + "/new"
             old = tempdir + "/old"
             self.get(path, old)
@@ -66,67 +66,26 @@ class Ext2_Ext4:
         subprocess.check_call(["e2fsck", "-fy", self.rootfs])
         subprocess.check_call(["resize2fs", self.rootfs])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        pgreen("[+] Resized to {size}".format(size=size))
+        logger.info("Resized to {size}".format(size=size))
 
     @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
     def correct(self):
-        porange("[+] Correcting ... (be patient)".format(size=size))
+        logger.info("Correcting ... (be patient)")
         subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS])
 
     def check(self):
         try:
-            print(" Checking the filesystem ".center(80, "+"))
+            logger.info(" Checking the filesystem ".center(80, "+"))
             subprocess.check_call(["e2fsck", "-vfy", self.rootfs])
         except subprocess.CalledProcessError as e:
-            print(e)
+            logger.error("Exception: {}".format(e))
             if str(e).find("returned non-zero exit status 1."):
-                porange("It's ok but next time poweroff")
+                logger.warning("It's ok but next time poweroff")
 
     def ls(self, path):
         ls_cmd = ["e2ls", self.rootfs + ":" + path]
         print((" " + " ".join(ls_cmd) + " ").center(80, "~"))
         subprocess.check_call(ls_cmd)
-
-
-class Cpio:
-    def __init__(self, path):
-        self.rootfs = path
-
-    def implemented(self):
-        return False
-
-    def __call__(self, t):
-        pred("__CALL__ {}".format(t))
-
-    def put(self, src, dest, right=444):
-        porange("put is not implented for {}".format(self.rootfs))
-
-    def get(self, src, dest):
-        porange("get is not implented for {}".format(self.rootfs))
-
-    def rm(self, filename, on_error=print_error):
-        porange("rm is not implented for {}".format(self.rootfs))
-
-    def create(self, dest, content, right=444):
-        porange("create is not implented for {}".format(self.rootfs))
-
-    def sed(self, regex, path, right=444):
-        porange("sed is not implented for {}".format(self.rootfs))
-
-    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
-    def resize(self, size):
-        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
-        subprocess.check_call(["ls", "-lh", self.rootfs])
-        pgreen("[+] Resized to {size}".format(size=size))
-
-    def correct(self, regex, path, right=444):
-        porange("correct is not implented for {}".format(self.rootfs))
-
-    def check(self):
-        porange("check is not implented for {}".format(self.rootfs))
-
-    def ls(self, path):
-        porange("ls is not implented for {}".format(self.rootfs))
 
 
 class Cpio:
@@ -138,37 +97,37 @@ class Cpio:
         return False
 
     def __call__(self, t):
-        pred("__CALL__ {}".format(t))
+        logger.error("__CALL__ {}".format(t))
 
     def put(self, src, dest, right=444):
-        porange("put is not implented for {}".format(self.filemagic))
+        logger.warning("put is not implented for {}".format(self.filemagic))
 
     def get(self, src, dest):
-        porange("get is not implented for {}".format(self.filemagic))
+        logger.warning("get is not implented for {}".format(self.filemagic))
 
     def rm(self, filename, on_error=print_error):
-        porange("rm is not implented for {}".format(self.filemagic))
+        logger.warning("rm is not implented for {}".format(self.filemagic))
 
     def create(self, dest, content, right=444):
-        porange("create is not implented for {}".format(self.filemagic))
+        logger.warning("create is not implented for {}".format(self.filemagic))
 
     def sed(self, regex, path, right=444):
-        porange("sed is not implented for {}".format(self.filemagic))
+        logger.warning("sed is not implented for {}".format(self.filemagic))
 
     @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
     def resize(self, size):
         subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        pgreen("[+] Resized to {size}".format(size=size))
+        logger.info("Resized to {}".format(size))
 
     def correct(self, regex, path, right=444):
-        porange("correct is not implented for {}".format(self.filemagic))
+        logger.warning("correct is not implented for {}".format(self.filemagic))
 
     def check(self):
-        porange("check is not implented for {}".format(self.filemagic))
+        logger.warning("check is not implented for {}".format(self.filemagic))
 
     def ls(self, path):
-        porange("ls is not implented for {}".format(self.filemagic))
+        logger.warning("ls is not implented for {}".format(self.filemagic))
 
 
 class Tar:
@@ -180,34 +139,34 @@ class Tar:
         return False
 
     def __call__(self, t):
-        pred("__CALL__ {}".format(t))
+        logger.error("__CALL__ {}".format(t))
 
     def put(self, src, dest, right=444):
-        porange("put is not implented for {}".format(self.filemagic))
+        logger.warning("put is not implented for {}".format(self.filemagic))
 
     def get(self, src, dest):
-        porange("get is not implented for {}".format(self.filemagic))
+        logger.warning("get is not implented for {}".format(self.filemagic))
 
     def rm(self, filename, on_error=print_error):
-        porange("rm is not implented for {}".format(self.filemagic))
+        logger.warning("rm is not implented for {}".format(self.filemagic))
 
     def create(self, dest, content, right=444):
-        porange("create is not implented for {}".format(self.filemagic))
+        logger.warning("create is not implented for {}".format(self.filemagic))
 
     def sed(self, regex, path, right=444):
-        porange("sed is not implented for {}".format(self.filemagic))
+        logger.warning("sed is not implented for {}".format(self.filemagic))
 
     @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
     def resize(self, size):
         subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
         subprocess.check_call(["ls", "-lh", self.rootfs])
-        pgreen("[+] Resized to {size}".format(size=size))
+        logger.info("Resized to {size}".format(size=size))
 
     def correct(self, regex, path, right=444):
-        porange("correct is not implented for {}".format(self.filemagic))
+        logger.warning("correct is not implented for {}".format(self.filemagic))
 
     def check(self):
-        porange("check is not implented for {}".format(self.filemagic))
+        logger.warning("check is not implented for {}".format(self.filemagic))
 
     def ls(self, path):
-        porange("ls is not implented for {}".format(self.filemagic))
+        logger.warning("ls is not implented for {}".format(self.filemagic))
