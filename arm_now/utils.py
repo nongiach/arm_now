@@ -34,10 +34,10 @@ pred = functools.partial(pcolor, "\x1B[31m")
 
 @functools.lru_cache()
 def distribution():
-    if platform.platform()=="linux":
+    if platform.system().lower()=="linux":
         return platform.linux_distribution()[0].lower()
     else:
-        return platform.platform()
+        return platform.system().lower()
     
 
 
