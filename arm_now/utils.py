@@ -34,7 +34,11 @@ pred = functools.partial(pcolor, "\x1B[31m")
 
 @functools.lru_cache()
 def distribution():
-    return platform.linux_distribution()[0].lower()
+    if platform.platform()=="linux":
+        return platform.linux_distribution()[0].lower()
+    else:
+        return platform.platform()
+    
 
 
 def which(filename, **kwargs):

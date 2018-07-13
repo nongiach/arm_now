@@ -230,12 +230,13 @@ export PATH=$PATH:/opt/bin:/opt/sbin
 
 def check_dependencies_or_exit():
     dependencies = [
-            which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
+            which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools",darwin="brew install e2tools"),
             which("qemu-system-arm",
                   ubuntu="apt-get install qemu",
                   kali="apt-get install qemu-system",
-                  arch="pacman -S qemu-arch-extra"),
-            which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip")
+                  arch="pacman -S qemu-arch-extra",
+                  darwin="brew install qemu"),
+            which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip"),
             ]
     if not all(dependencies):
         print("requirements missing, plz install them", file=sys.stderr)
