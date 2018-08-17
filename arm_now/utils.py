@@ -34,8 +34,10 @@ pred = functools.partial(pcolor, "\x1B[31m")
 
 @functools.lru_cache()
 def distribution():
-    return platform.linux_distribution()[0].lower()
-
+    system = platform.system()
+    if system != 'Darwin':
+        return platform.linux_distribution()[0].lower()
+    return "macos"
 
 def which(filename, **kwargs):
     try:

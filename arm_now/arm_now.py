@@ -58,7 +58,7 @@ from subprocess import check_call
 from exall import exall, ignore
 from docopt import docopt
 
-from .utils import pgreen, pred, porange, maybe_you_meant, which
+from .utils import pgreen, pred, porange, maybe_you_meant, which, distribution
 from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
@@ -123,7 +123,11 @@ def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
     print("Starting qemu-system-{}".format(arch))
-    qemu_config = "-serial stdio -monitor /dev/null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
+    dist = distribution()
+    if dist == "macos":
+        qemu_config = "{add_qemu_options}".format(add_qemu_options=add_qemu_options)
+    else:
+        qemu_config = "-serial stdio -monitor /dev/null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
     cmd = """stty intr ^]
        export QEMU_AUDIO_DRV="none"
        qemu-system-{arch} {options} \
@@ -230,12 +234,18 @@ export PATH=$PATH:/opt/bin:/opt/sbin
 
 def check_dependencies_or_exit():
     dependencies = [
-            which("e2cp", ubuntu="apt-get install e2tools", arch="yaourt -S e2tools"),
+            which("e2cp",
+                ubuntu="apt-get install e2tools",
+                arch="yaourt -S e2tools",
+                macos="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f"),
             which("qemu-system-arm",
                   ubuntu="apt-get install qemu",
                   kali="apt-get install qemu-system",
-                  arch="pacman -S qemu-arch-extra"),
-            which("unzip", ubuntu="apt-get install unzip", arch="pacman -S unzip")
+                  arch="pacman -S qemu-arch-extra", macos="brew install qemu"),
+            which("unzip",
+                ubuntu="apt-get install unzip",
+                arch="pacman -S unzip",
+                macos="brew install unzip")
             ]
     if not all(dependencies):
         print("requirements missing, plz install them", file=sys.stderr)
