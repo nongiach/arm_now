@@ -124,7 +124,7 @@ def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
     arch = qemu_options[arch][0]
     print("Starting qemu-system-{}".format(arch))
     dist = distribution()
-    if dist == "macos":
+    if dist == "darwin":
         qemu_config = "{add_qemu_options}".format(add_qemu_options=add_qemu_options)
     else:
         qemu_config = "-serial stdio -monitor /dev/null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
@@ -237,15 +237,16 @@ def check_dependencies_or_exit():
             which("e2cp",
                 ubuntu="apt-get install e2tools",
                 arch="yaourt -S e2tools",
-                macos="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f"),
+                darwin="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f"),
             which("qemu-system-arm",
                   ubuntu="apt-get install qemu",
                   kali="apt-get install qemu-system",
-                  arch="pacman -S qemu-arch-extra", macos="brew install qemu"),
+                  arch="pacman -S qemu-arch-extra",
+                  darwin="brew install qemu"),
             which("unzip",
                 ubuntu="apt-get install unzip",
                 arch="pacman -S unzip",
-                macos="brew install unzip")
+                darwin="brew install unzip")
             ]
     if not all(dependencies):
         print("requirements missing, plz install them", file=sys.stderr)
