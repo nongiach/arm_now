@@ -58,7 +58,7 @@ from subprocess import check_call
 from exall import exall, ignore
 from docopt import docopt
 
-from .utils import pgreen, pred, porange, maybe_you_meant, which, distribution
+from .utils import pgreen, pred, porange, maybe_you_meant, which
 from .filesystem import Filesystem
 from .config import Config, qemu_options, install_opkg
 from . import options
@@ -123,11 +123,7 @@ def run_qemu(arch, kernel, dtb, rootfs, add_qemu_options):
     options = qemu_options[arch][1].format(arch=arch, kernel=kernel, rootfs=rootfs, dtb=dtb)
     arch = qemu_options[arch][0]
     print("Starting qemu-system-{}".format(arch))
-    dist = distribution()
-    if dist == "darwin":
-        qemu_config = "{add_qemu_options}".format(add_qemu_options=add_qemu_options)
-    else:
-        qemu_config = "-serial stdio -monitor /dev/null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
+    qemu_config = "-serial stdio -monitor null {add_qemu_options}".format(add_qemu_options=add_qemu_options)
     cmd = """stty intr ^]
        export QEMU_AUDIO_DRV="none"
        qemu-system-{arch} {options} \
