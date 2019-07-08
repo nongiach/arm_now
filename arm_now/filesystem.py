@@ -3,8 +3,8 @@ import tempfile
 import sys
 
 import magic
-from exall import exall, print_error
-from .utils import pred, porange, pgreen
+from exall import exall
+from .utils import pred, porange, pgreen, fatal_process_error
 from .config import Config
 
 
@@ -28,24 +28,28 @@ class Ext2_Ext4:
     def implemented(self):
         return True
 
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def put(self, src, dest, right=444):
-        subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') + [str(right), src, self.rootfs + ":" + dest])
+        subprocess.run("e2cp -G 0 -O 0 -P".split(' ') + [str(right), src, self.rootfs + ":" + dest], check=True, stderr=subprocess.PIPE)
 
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def get(self, src, dest):
-        subprocess.check_call(["e2cp", self.rootfs + ":" + src, dest])
+        subprocess.run(["e2cp", self.rootfs + ":" + src, dest], check=True, stderr=subprocess.PIPE)
 
     def rm(self, filename):
         def e2rm_warning(_exception):
             porange("WARNING: e2rm file already suppressed")
-        with exall(subprocess.check_call, subprocess.CalledProcessError, e2rm_warning):
-            subprocess.check_call(["e2rm", self.rootfs + ":" + filename])
+        with exall(subprocess.run, subprocess.CalledProcessError, e2rm_warning):
+            subprocess.run(["e2rm", self.rootfs + ":" + filename], check=True, stderr=subprocess.PIPE)
 
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def create(self, dest, content, right=444):
         with tempfile.NamedTemporaryFile() as temp:
             temp.write(bytes(content, "utf-8"))
             temp.flush()
-            subprocess.check_call("e2cp -G 0 -O 0 -P".split(' ') + [str(right), temp.name, self.rootfs + ":" + dest])
+            subprocess.run("e2cp -G 0 -O 0 -P".split(' ') + [str(right), temp.name, self.rootfs + ":" + dest], check=True, stderr=subprocess.PIPE)
 
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def sed(self, regex, path, right=444):
         """ Replace with sed in the roofs
         Example: fs.sed('s/init.d\/S/init.d\/K/g', '/etc/init.d/rcK', right=755)
@@ -56,22 +60,22 @@ class Ext2_Ext4:
             new = tempdir + "/new"
             old = tempdir + "/old"
             self.get(path, old)
-            subprocess.check_call("sed '{regex}' {old} > {new}".format(
-                regex=regex, new=new, old=old), shell=True)
+            subprocess.run("sed '{regex}' {old} > {new}".format(
+                regex=regex, new=new, old=old), shell=True, check=True, stderr=subprocess.PIPE)
             self.put(new, path, right=right)
 
-    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def resize(self, size):
-        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
-        subprocess.check_call(["e2fsck", "-fy", self.rootfs])
-        subprocess.check_call(["resize2fs", self.rootfs])
-        subprocess.check_call(["ls", "-lh", self.rootfs])
+        subprocess.run(["qemu-img", "resize", self.rootfs, size], check=True, stderr=subprocess.PIPE)
+        subprocess.run(["e2fsck", "-fy", self.rootfs], check=True, stderr=subprocess.PIPE)
+        subprocess.run(["resize2fs", self.rootfs], check=True, stderr=subprocess.PIPE)
+        subprocess.run(["ls", "-lh", self.rootfs], check=True, stderr=subprocess.PIPE)
         pgreen("[+] Resized to {size}".format(size=size))
 
-    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def correct(self):
         porange("[+] Correcting ... (be patient)".format(size=size))
-        subprocess.check_call("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS])
+        subprocess.run("mke2fs -F -b 1024 -m 0 -g 272".split() + [Config.ROOTFS], check=True, stderr=subprocess.PIPE)
 
     def check(self):
         try:
@@ -82,10 +86,11 @@ class Ext2_Ext4:
             if str(e).find("returned non-zero exit status 1."):
                 porange("It's ok but next time poweroff")
 
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def ls(self, path):
         ls_cmd = ["e2ls", self.rootfs + ":" + path]
         print((" " + " ".join(ls_cmd) + " ").center(80, "~"))
-        subprocess.check_call(ls_cmd)
+        subprocess.run(ls_cmd, check=True, stderr=subprocess.PIPE)
 
 
 class Cpio:
@@ -104,7 +109,7 @@ class Cpio:
     def get(self, src, dest):
         porange("get is not implented for {}".format(self.rootfs))
 
-    def rm(self, filename, on_error=print_error):
+    def rm(self, filename, on_error=fatal_process_error):
         porange("rm is not implented for {}".format(self.rootfs))
 
     def create(self, dest, content, right=444):
@@ -113,10 +118,10 @@ class Cpio:
     def sed(self, regex, path, right=444):
         porange("sed is not implented for {}".format(self.rootfs))
 
-    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def resize(self, size):
-        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
-        subprocess.check_call(["ls", "-lh", self.rootfs])
+        subprocess.run(["qemu-img", "resize", self.rootfs, size], check=True, stderr=subprocess.PIPE)
+        subprocess.run(["ls", "-lh", self.rootfs], check=True, stderr=subprocess.PIPE)
         pgreen("[+] Resized to {size}".format(size=size))
 
     def correct(self, regex, path, right=444):
@@ -146,7 +151,7 @@ class Cpio:
     def get(self, src, dest):
         porange("get is not implented for {}".format(self.filemagic))
 
-    def rm(self, filename, on_error=print_error):
+    def rm(self, filename, on_error=fatal_process_error):
         porange("rm is not implented for {}".format(self.filemagic))
 
     def create(self, dest, content, right=444):
@@ -155,10 +160,10 @@ class Cpio:
     def sed(self, regex, path, right=444):
         porange("sed is not implented for {}".format(self.filemagic))
 
-    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def resize(self, size):
-        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
-        subprocess.check_call(["ls", "-lh", self.rootfs])
+        subprocess.run(["qemu-img", "resize", self.rootfs, size], check=True, stderr=subprocess.PIPE)
+        subprocess.run(["ls", "-lh", self.rootfs], check=True, stderr=subprocess.PIPE)
         pgreen("[+] Resized to {size}".format(size=size))
 
     def correct(self, regex, path, right=444):
@@ -188,7 +193,7 @@ class Tar:
     def get(self, src, dest):
         porange("get is not implented for {}".format(self.filemagic))
 
-    def rm(self, filename, on_error=print_error):
+    def rm(self, filename, on_error=fatal_process_error):
         porange("rm is not implented for {}".format(self.filemagic))
 
     def create(self, dest, content, right=444):
@@ -197,10 +202,10 @@ class Tar:
     def sed(self, regex, path, right=444):
         porange("sed is not implented for {}".format(self.filemagic))
 
-    @exall(subprocess.check_call, subprocess.CalledProcessError, print_error)
+    @exall(subprocess.run, subprocess.CalledProcessError, fatal_process_error)
     def resize(self, size):
-        subprocess.check_call(["qemu-img", "resize", self.rootfs, size])
-        subprocess.check_call(["ls", "-lh", self.rootfs])
+        subprocess.run(["qemu-img", "resize", self.rootfs, size], check=True, stderr=subprocess.PIPE)
+        subprocess.run(["ls", "-lh", self.rootfs], check=True, stderr=subprocess.PIPE)
         pgreen("[+] Resized to {size}".format(size=size))
 
     def correct(self, regex, path, right=444):
@@ -211,3 +216,4 @@ class Tar:
 
     def ls(self, path):
         porange("ls is not implented for {}".format(self.filemagic))
+

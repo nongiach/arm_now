@@ -63,3 +63,18 @@ def avoid_parameter_injection(params):
         else:
             new_params.append(p)
     return new_params
+
+
+def fatal_process_error(process_exception):
+    pred("ERROR: The following command returned a non-zero exit code:")
+    pred(" ".join(process_exception.cmd), "\n")
+    stderr = process_exception.stderr
+
+    if stderr:
+        for line in stderr.decode().split("\n"):
+            pred(line)
+    else:
+        porange("WARNING: stderr was not captured")
+
+    sys.exit(1)
+
