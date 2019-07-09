@@ -249,19 +249,22 @@ def check_dependencies_or_exit():
         sys.exit(1)
 
 
-re_redir = re.compile(r"(tcp|udp):\d+::\d+")
-
+re_redir = re.compile(r"(tcp|udp):\d+:\d+")
 
 def convert_redir_to_qemu_args(redir):
+    args = []
+
     for r in redir:
         if not re_redir.match(r):
             pred("ERROR: Invalid argument: --redir {}".format(r))
             print("example:")
-            print("\tredirect tcp host 8000 to guest 80: --redir tcp:8000::80")
-            print("\tredirect udp host 4444 to guest 44: --redir udp:4444::44")
+            print("\tredirect tcp host 8000 to guest 80: --redir tcp:8000:80")
+            print("\tredirect udp host 4444 to guest 44: --redir udp:4444:44")
             sys.exit(1)
-    return ''.join(map("-redir {} ".format, redir))
 
+        args.append("-nic user,hostfwd={}::{}-:{} ".format(*r.split(":")))
+
+    return "".join(args)
 
 def do_resize(size, correct):
     """ Resize filesystem.
