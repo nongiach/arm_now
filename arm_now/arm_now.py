@@ -252,7 +252,7 @@ def check_dependencies_or_exit():
 re_redir = re.compile(r"(tcp|udp):\d+:\d+")
 
 def convert_redir_to_qemu_args(redir):
-    args = []
+    args = ["-nic user"]
 
     for r in redir:
         if not re_redir.match(r):
@@ -262,9 +262,9 @@ def convert_redir_to_qemu_args(redir):
             print("\tredirect udp host 4444 to guest 44: --redir udp:4444:44")
             sys.exit(1)
 
-        args.append("-nic user,hostfwd={}::{}-:{} ".format(*r.split(":")))
+        args.append("hostfwd={}::{}-:{}".format(*r.split(":")))
 
-    return "".join(args)
+    return ",".join(args) + " "
 
 def do_resize(size, correct):
     """ Resize filesystem.
