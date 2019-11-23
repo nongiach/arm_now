@@ -1,3 +1,4 @@
+# This script is used to configure all rootfs image template before uploading them here: https://github.com/nongiach/arm_now_templates
 cd ../
 rm -rf preconfig
 mkdir preconfig
