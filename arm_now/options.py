@@ -5,7 +5,7 @@ import subprocess
 from exall import exall, ignore, print_warning
 
 from .filesystem import Filesystem, tempfile
-from .utils import pgreen
+from .utils import pgreen, porange, fatal_process_error
 
 
 @exall(os.unlink, FileNotFoundError, ignore)
@@ -38,8 +38,13 @@ def sync_upload(rootfs, src, dest):
         files = [i for i in os.listdir(".") if i != "arm_now" and not i.startswith("-")]
         if files:
             tar = tmpdirname + "/current_directory.tar"
-            subprocess.check_call(["tar", "cf", tar] + files)
-            subprocess.check_call("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"])
+            try:
+                subprocess.run(["tar", "cf", tar] + files, check=True, stderr=subprocess.PIPE)
+                subprocess.run("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"], check=True, stderr=subprocess.PIPE)
+            except subprocess.CalledProcessError as e:
+                porange("There's probably not enough space in the filesystem ! Try 'arm_now resize'")
+                fatal_process_error(e)
+
             fs.create("/etc/init.d/S95_sync_current_diretory", """
                         cd {dest}
                         tar xf /current_directory.tar
