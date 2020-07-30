@@ -18,7 +18,8 @@ git clean -fdx
 
 # Upload to pypi
 ```sh
-python3 setup.py sdist upload -r pypitest
-python3 setup.py sdist upload -r pypi
-pip3 install --no-cache-dir arm_now
+sudo pip3 install twine
+sudo git clean -fdx
+python3 setup.py sdist
+twine upload dist/*
 ```
