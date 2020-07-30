@@ -70,7 +70,7 @@ def main():
         Read above to acknowledge supported commands
     """
     check_dependencies_or_exit()
-    a = docopt(__doc__, version='arm_now 1.25')
+    a = docopt(__doc__, version='arm_now 1.26')
     if not a["<arch>"] and os.path.isfile(Config.ARCH):
         with open(Config.ARCH) as F:
             a["<arch>"] = F.read()
@@ -235,10 +235,10 @@ def check_dependencies_or_exit():
                 arch="yaourt -S e2tools",
                 darwin="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f"),
             which("qemu-system-arm",
-                  ubuntu="apt-get install qemu",
-                  kali="apt-get install qemu-system",
-                  arch="pacman -S qemu-arch-extra",
-                  darwin="brew install qemu"),
+                ubuntu="apt-get install qemu\n For Kali: apt-get install qemu-system",
+                kali="apt-get install qemu-system",
+                arch="pacman -S qemu-arch-extra",
+                darwin="brew install qemu"),
             which("unzip",
                 ubuntu="apt-get install unzip",
                 arch="pacman -S unzip",

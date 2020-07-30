@@ -20,6 +20,9 @@ git clean -fdx
 ```sh
 sudo pip3 install twine
 sudo git clean -fdx
+
 python3 setup.py sdist
 twine upload dist/*
+
+sudo pip3 install --no-cache-dir arm_now
 ```
