@@ -21,7 +21,8 @@ setup(name='arm_now',
             'requests',
             'docopt',
             'pySmartDL',
-            'python-magic'
+            'python-magic',
+            'distro'
             ],
         keywords = ['emulator', 'arm', 'mips', 'powerpc', 'x86', 'qemu']
         )
