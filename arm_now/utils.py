@@ -4,6 +4,7 @@ import sys
 import difflib
 import contextlib
 import platform
+import distro
 
 """
 Utils functions:
@@ -36,7 +37,7 @@ pred = functools.partial(pcolor, "\x1B[31m")
 def distribution():
     system = platform.system().lower()
     if system != 'darwin':
-        return platform.linux_distribution()[0].lower()
+        return distro.linux_distribution()[0].lower()
     return system
 
 def which(filename, **kwargs):
