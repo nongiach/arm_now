@@ -9,6 +9,7 @@ arm_now is a qemu powered tool that allows instant setup of virtual machines on 
 ```sh
 # pip3 install https://github.com/nongiach/arm_now/archive/master.zip --upgrade
 ```
+Supported System: Linux, Windows WSL, MacOS, Docker.
 
 # Start an arm Virtual Machine
 ```sh
