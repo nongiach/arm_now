@@ -17,3 +17,9 @@ You should consider upgrading via the 'pip install --upgrade pip' command.
 ```sh
 pip install --upgrade pip
 ```
+# System error
+For any error related to your system configuration please use docker or open an issue.
+```sh
+docker run -it --name arm_now -v $PWD:/mount --rm bannsec/arm_now_docker arm_now
+```
+More information here: https://github.com/bannsec/arm_now_docker
