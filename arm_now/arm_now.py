@@ -235,7 +235,7 @@ def check_dependencies_or_exit():
                 arch="yaourt -S e2tools",
                 darwin="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f"),
             which("qemu-system-arm",
-                ubuntu="apt-get install qemu\n For Kali: apt-get install qemu-system",
+                ubuntu="apt-get install qemu\n For Kali or Ubuntu: apt-get install qemu-system",
                 kali="apt-get install qemu-system",
                 arch="pacman -S qemu-arch-extra",
                 darwin="brew install qemu"),
