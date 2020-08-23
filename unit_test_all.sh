@@ -4,29 +4,26 @@ rm -rf test_arm_now
 mkdir test_arm_now
 cd test_arm_now
 
-echo Start > results.txt
+cat <<EOF> results.txt
+##########################################
+#  Author: @chaignc - arm_now unit test  #
+##########################################
+EOF
 
-# for arch in $(arm_now list | grep -v -P '^(m68k-coldfire|microblazebe|microblazeel|nios2|xtensa-lx60)$')
-for arch in $(echo armv5-eabi armv5-eabi)
+for arch in $(arm_now list | grep -v -P '^(m68k-coldfire|microblazebe|microblazeel|nios2|xtensa-lx60)$')
 do
   echo arch ARCH="$arch"
   cat <<EOF>entrypoint.sh
 cd /root
-pwd
-ls
-cat results.txt
 echo "$arch : Success" >> results.txt
-echo "Inside...."
-cat results.txt
-sync
 save
 poweroff
 EOF
 
-  # arm_now start "$arch" --clean --sync --autostart entrypoint.sh 
-  arm_now start "$arch" --clean --sync 
-  echo "Host: $arch"
-  # if [[ "$RET" == "0" ]]; then
-  # fi
+  arm_now start "$arch" --clean --sync --autostart entrypoint.sh 
+  grep "$arch : Success" results.txt &>/dev/null || echo "$arch : Fail" >> results.txt
 done
-cat results.txt
+# add colors to output
+cat results.txt | awk '/Success/ { print "\033[32m" $0; next } \
+    /Fail/ { print "\033[31m" $0; next } \
+    { print "\033[37m" $0 }'
