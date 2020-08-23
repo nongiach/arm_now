@@ -49,6 +49,8 @@ then
 
 fi
 
+rm wget-log*
+sync
 poweroff
 EOF
   echo armv5-eabi armv7-eabihf mips32el x86-64-core-i7 x86-core2 x86-i686 | grep -- "$arch"

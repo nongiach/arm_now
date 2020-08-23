@@ -40,11 +40,11 @@ def sync_upload(rootfs, src, dest):
             tar = tmpdirname + "/current_directory.tar"
             subprocess.check_call(["tar", "cf", tar] + files)
             subprocess.check_call("e2cp -G 0 -O 0".split(' ') + [tar, rootfs + ":/"])
-            fs.create("/etc/init.d/S95_sync_current_diretory", """
+            fs.create("/etc/init.d/S85_sync_current_diretory", """
                         cd {dest}
                         tar xf /current_directory.tar
                         rm /current_directory.tar
-                        rm /etc/init.d/S95_sync_current_diretory
+                        rm /etc/init.d/S85_sync_current_diretory
                         """.format(dest=dest), right=555)
 
     # TODO: check rootfs fs against parameter injection
