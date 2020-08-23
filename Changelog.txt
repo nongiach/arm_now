@@ -36,7 +36,7 @@ Add colors
 Add -add-qemu-options
 Add show command
 
-
+--- Thu May 31 2018
 TODO:
 Add a new features sections
 	autostart
@@ -69,3 +69,8 @@ Add bridged network.
 rootfs are mostly composed of null bytes, so we can download, preconfig, and compress all of them to gain speed.
 Use dhcp to connect several vm together
 use etc/initab for automatic sync saving ?
+
+--- Mon 24 Aug 2020
+Fixing autostart with sync, so synced files can be used in the autostart script.
+Adding unit test, just start => ./unit_test_all.sh
+

@@ -26,3 +26,9 @@ twine upload dist/*
 
 sudo pip3 install --no-cache-dir arm_now
 ```
+
+# Unit test
+To test if arm_now is working on all supported CPU run the bellow script.
+```sh
+./unit_test_all.sh
+```
