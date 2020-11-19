@@ -233,16 +233,19 @@ def check_dependencies_or_exit():
             which("e2cp",
                 ubuntu="apt-get install e2tools",
                 arch="yaourt -S e2tools",
-                darwin="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f"),
+                darwin="brew install e2tools gettext e2fsprogs\nbrew unlink e2fsprogs && brew link e2fsprogs -f",
+                fedora="dnf install e2tools"),
             which("qemu-system-arm",
                 ubuntu="apt-get install qemu\n For Kali or Ubuntu: apt-get install qemu-system",
                 kali="apt-get install qemu-system",
                 arch="pacman -S qemu-arch-extra",
-                darwin="brew install qemu"),
+                darwin="brew install qemu",
+                fedora="dnf install qemu-system-arm"),
             which("unzip",
                 ubuntu="apt-get install unzip",
                 arch="pacman -S unzip",
-                darwin="brew install unzip")
+                darwin="brew install unzip",
+                fedora="dnf install unzip")
             ]
     if not all(dependencies):
         print("requirements missing, plz install them", file=sys.stderr)
