@@ -255,7 +255,7 @@ def check_dependencies_or_exit():
 re_redir = re.compile(r"(tcp|udp):\d+:\d+")
 
 def convert_redir_to_qemu_args(redir):
-    args = ["-nic user"]
+    args = ["-net user"]
 
     for r in redir:
         if not re_redir.match(r):
